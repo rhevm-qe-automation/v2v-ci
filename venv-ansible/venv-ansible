@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+set -xe
+
+VENV=.ansbile
+
+if [ ! -d "VENV" ]; then
+    virtualenv $VENV
+fi
+
+source $VENV/bin/activate
+pip install -U -r requirements.txt -q
+
+ansible-playbook --version
+
+INVENTORY=$1
+shift
+PLAYBOOK=$1
+shift
+
+SSH_KEY=""
+if [ -e "$HOME/jenkins_ssh_key" ];
+then
+    SSH_KEY="--key-file $HOME/jenkins_ssh_key"
+fi
+if [ -n "$JENKINS_URL" ]
+then
+    # Running on Jenkins we want to see colorful output
+    export ANSIBLE_FORCE_COLOR=true
+fi
+
+export ANSIBLE_SSH_RETRIES=10
+export ANSIBLE_HOST_KEY_CHECKING=False
+
+pushd $WORKSPACE
+
+[ -e "$PLAYBOOK" ]
+
+ansible-playbook \
+    -u root \
+    -i "$INVENTORY" \
+    $SSH_KEY "$@" "$PLAYBOOK"
+
+popd
+deactivate
