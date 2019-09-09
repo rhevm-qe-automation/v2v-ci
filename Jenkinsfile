@@ -1,4 +1,4 @@
-@Library(['rhv-qe-jenkins-library@master']) _
+@Library(['rhv-qe-jenkins-library-istein1@add_stage']) _
 
 properties(
   [
@@ -7,7 +7,7 @@ properties(
         string(defaultValue: 'v2v-node', description: 'Name or label of slave to run on', name: 'NODE_LABEL'),
         booleanParam(defaultValue: false, description: 'Nightly pre check', name: 'MIQ_NIGHTLY_PRE_CHECK'),
         booleanParam(defaultValue: false, description: 'Remove existing instance', name: 'MIQ_REMOVE_EXISTING_INSTANCE'),
-        string(defaultValue: '', description: 'GE FQDN. If left empty, the FQDN will be taken from source yaml', name: 'GE'),
+        string(defaultValue: '', description: 'Name of GE or label that match the desired GE.', name: 'GE_NAME'),
         string(defaultValue: '', description: 'The name of the main YAML file e.g. v2v-1. The file placed under rhevm-jenkins/qe/v2v/', name: 'SOURCE_YAML'),
         string(defaultValue: '', description: 'Image URL e.g. http://file.cloudforms.lab.eng.rdu2.redhat.com/builds/cfme/5.10/stable/cfme-rhevm-5.10.0.33-1.x86_64.qcow2', name: 'CFME_IMAGE_URL'),
         string(defaultValue: '', description: 'RHV hosts selection, separated by a comma e.g. 1,3-5,7. Leave empty to use ALL hosts', name: 'RHV_HOSTS'),
@@ -19,7 +19,7 @@ properties(
         choice(defaultValue: 'VDDK', description: 'Migration Protocol - SSH/VDDK', name: 'TRANSPORT_METHODS', choices: ['VDDK', 'SSH']),
         string(defaultValue: '20', description: 'Provider concurrent migration max num of VMs', name: 'PROVIDER_CONCURRENT_MAX'),
         string(defaultValue: '10', description: 'Host concurrent migration max num of VMs', name: 'HOST_CONCURRENT_MAX'),
-        choice(defaultValue: 'Create VMs', description: 'Specify a stage to run from', name: 'START_FROM_STAGE', choices: ['Create VMs', 'Install Nmon', 'Add extra providers', 'Set RHV provider concurrent VM migration max', 'Configure oVirt conversion hosts', 'Configure ESX hosts', 'VMware hosts set public key', 'Conversion hosts enable', 'Create transformation mappings', 'Create transformation plans', 'Start performance monitoring', 'Execute transformation plans', 'Monitor transformation plans']),
+        choice(defaultValue: 'Create VMs', description: 'Specify a stage to run from', name: 'START_FROM_STAGE', choices: ['Create VMs', 'Remove RHV VMs', 'Install Nmon', 'Add extra providers', 'Set RHV provider concurrent VM migration max', 'Configure oVirt conversion hosts', 'Configure ESX hosts', 'SSH Configuration', 'Conversion hosts enable', 'Create transformation mappings', 'Create transformation plans', 'Start performance monitoring', 'Execute transformation plans', 'Monitor transformation plans']),
         booleanParam(defaultValue: false, description: 'If checked, this will be the ONLY stage to run', name: 'SINGLE_STAGE'),
         choice(defaultValue: '', description: 'Specify the verbosity level of running stages', name: 'VERBOSITY_LEVEL', choices: ['', '-v', '-vv', '-vvv']),
         string(defaultValue: '', description: 'Gerrit refspec for cherry pick', name: 'JENKINS_GERRIT_REFSPEC')
@@ -39,13 +39,13 @@ pipeline {
   stages {
     stage ('Main Stage') {
       options {
-        lock(resource: "${GE}")
+        lock(resource: "${GE_NAME}")
       }
       stages {
         stage ('Locked Resources') {
           steps {
             script {
-              log.info("Locked resources: ${GE}")
+              log.info("Locked resources: ${GE_NAME}")
             }
           }
         }
@@ -106,7 +106,7 @@ pipeline {
                                                         --v2v_ci_source_datastore "$VMW_STORAGE_NAME" \
                                                         --v2v_ci_target_datastore "$RHV_STORAGE_NAME" \
                                                         --job_basename_url $JOB_BASE_NAME \
-                                                        --rhv_ge "$GE"
+                                                        --rhv_ge "$GE_NAME"
 
                 deactivate
                 '''
@@ -182,6 +182,20 @@ pipeline {
           }
         }
 
+        stage ('Remove RHV VMs') {
+          when {
+            expression { stages_['Remove RHV VMs'] }
+          }
+          steps {
+            v2v_ansible(
+              playbook: 'miq_run_step.yml',
+              extraVars: ['@extra_vars.yml'],
+              tags: ['remove_rhv_vms'],
+              verbosity: params.VERBOSITY_LEVEL
+            )
+          }
+        }
+
         stage ('Install Nmon') {
           when {
             expression { stages_['Install Nmon'] }
@@ -252,15 +266,15 @@ pipeline {
           }
         }
 
-        stage ('VMware hosts set public key') {
+        stage ('SSH configuration') {
           when {
-            expression { stages_['VMware hosts set public key'] }
+            expression { stages_['SSH Configuration'] }
           }
           steps {
             v2v_ansible(
               playbook: 'miq_run_step.yml',
               extraVars: ['@extra_vars.yml'],
-              tags: ['vmware_hosts_set_public_key'],
+              tags: ['ssh_configuration'],
               verbosity: params.VERBOSITY_LEVEL
             )
           }

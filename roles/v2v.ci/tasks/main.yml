@@ -22,6 +22,12 @@
   tags:
     - miq_create_vms
 
+- import_tasks: remove_rhv_vms.yml
+  delegate_to: localhost
+  connection: local
+  tags:
+    - remove_rhv_vms
+
 - import_tasks: miq_install_nmon.yml
   delegate_to: localhost
   connection: local
@@ -50,9 +56,11 @@
   tags:
     - miq_config_vmware_esx_hosts
 
-- import_tasks: vmware_hosts_set_public_key.yml
+- include_tasks: ssh_configuration.yml
+  with_items:
+    -  "{{ groups['vmware_esx_hosts'] }}"
   tags:
-    - vmware_hosts_set_public_key
+    - ssh_configuration
 
 - include_tasks: miq_conversion_hosts_enable.yml
   with_items:

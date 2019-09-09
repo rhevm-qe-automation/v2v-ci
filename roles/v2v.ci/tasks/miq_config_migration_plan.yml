@@ -59,6 +59,21 @@
   set_fact:
     vm_ids: "{{ vm_ids_json.results | json_query(vm_query) }}"
 
+- name: Remove migrated tag from VMs
+  uri:
+    url: "https://{{ inventory_hostname }}/api/vms/{{ item }}/tags"
+    user: "{{ miq_app_username | default('admin') }}"
+    password: "{{ miq_app_password | default('smartvm') }}"
+    method: POST
+    validate_certs: no
+    body_format: json
+    body:
+      action: unassign
+      resources:
+        - category: "transformation_status"
+          name: "migrated"
+  with_items: "{{ vm_ids }}"
+
 - name: Create migration plan
   uri:
     url: "https://{{ inventory_hostname }}/api/service_templates"

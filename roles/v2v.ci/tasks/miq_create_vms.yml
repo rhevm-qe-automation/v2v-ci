@@ -1,18 +1,6 @@
 ---
 
-# Remove & Create VMs 
-- name: Remove RHV/Ovirt target instances if present
-  ovirt_vm:
-    auth:
-      username: "{{ v2v_ci_rhv_user }}"
-      password: "{{ v2v_ci_rhv_password }}"
-      hostname: "{{ v2v_ci_rhv_hostname }}"
-      insecure: yes
-    state: absent
-    name: "{{ item }}"
-    cluster: "{{ v2v_ci_target_cluster }}"
-  with_items: "{{ v2v_ci_migration_plan_vms }}"
-
+# Remove & Create VMs
 - name: Remove VMware source instances if present
   vmware_guest:
     hostname: "{{ v2v_ci_vmw_hostname }}"
@@ -23,6 +11,12 @@
     name: "{{ item }}"
     cluster: "{{ v2v_ci_source_cluster }}"
   with_items: "{{ v2v_ci_migration_plan_vms }}"
+
+- set_fact:
+    vms_per_host: "{{ '1' if v2v_ci_migration_plan_vms|length == 1 else v2v_ci_migration_plan_vms|length / groups['vmware_esx_hosts']|length }}"
+#    vms_per_host: "{{ v2v_ci_migration_plan_vms|length / groups['vmware_esx_hosts']|length }}"
+
+- debug: msg="{{vms_per_host}}"
 
 - name:  Clone a virtual machine from Linux template
   vmware_guest:
@@ -36,8 +30,10 @@
     template: "{{ v2v_ci_vmw_template }}" 
     name: "{{ item }}"
     datastore: "{{ v2v_ci_source_datastore }}"
-    esxi_hostname: "{{ groups['vmware_esx_hosts'][0] }}"
-  with_items: "{{ v2v_ci_migration_plan_vms }}"
+    esxi_hostname: "{{ groups['vmware_esx_hosts'][my_idx|int // vms_per_host|int] }}"
+  loop: "{{ v2v_ci_migration_plan_vms }}"
+  loop_control:
+    index_var: my_idx
   async: 7200
   poll: 0
   register: new_vms

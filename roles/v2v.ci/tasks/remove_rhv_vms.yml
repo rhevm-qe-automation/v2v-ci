@@ -1,0 +1,14 @@
+---
+
+# Remove VMs from RHV
+- name: Remove RHV/Ovirt target instances if present
+  ovirt_vm:
+    auth:
+      username: "{{ v2v_ci_rhv_user }}"
+      password: "{{ v2v_ci_rhv_password }}"
+      hostname: "{{ v2v_ci_rhv_hostname }}"
+      insecure: yes
+    state: absent
+    name: "{{ item }}"
+    cluster: "{{ v2v_ci_target_cluster }}"
+  with_items: "{{ v2v_ci_migration_plan_vms }}"
