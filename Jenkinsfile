@@ -1,4 +1,4 @@
-@Library(['rhv-qe-jenkins-library-istein1@add_stage']) _
+@Library(['rhv-qe-jenkins-library@master']) _
 
 properties(
   [
