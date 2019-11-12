@@ -2,8 +2,8 @@
 - name: Collect migration plan ID
   uri:
     url: "https://{{ inventory_hostname }}/api/service_templates/?filter[]=name={{ v2v_ci_migration_plan_name }}&expand=resources"
-    user: "{{ miq_app_username | default('admin') }}"
-    password: "{{ miq_app_password | default('smartvm') }}"
+    user: "{{ miq_app_username }}"
+    password: "{{ miq_app_password }}"
     method: GET
     validate_certs: no
   register: migration_plan_json
@@ -18,8 +18,8 @@
 - name: Order migration plan
   uri:
     url: "https://{{ inventory_hostname }}/api/service_templates/{{ migration_plan_id }}"
-    user: "{{ miq_app_username | default('admin') }}"
-    password: "{{ miq_app_password | default('smartvm') }}"
+    user: "{{ miq_app_username }}"
+    password: "{{ miq_app_password }}"
     method: POST
     validate_certs: no
     body_format: json

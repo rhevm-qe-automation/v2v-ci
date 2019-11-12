@@ -2,8 +2,8 @@
 - name: Check for active requests for transformation plan {{ v2v_ci_migration_plan_name }}
   uri:
     url: "https://{{ inventory_hostname }}/api/service_templates/?filter[]=type='ServiceTemplateTransformationPlan'&filter[]=name='{{ v2v_ci_migration_plan_name }}'&filter[]=active=true&expand=resources&attributes=name,description,miq_requests,options"
-    user: "{{ miq_app_username | default('admin') }}"
-    password: "{{ miq_app_password | default('smartvm') }}"
+    user: "{{ miq_app_username }}"
+    password: "{{ miq_app_password }}"
     method: GET
     validate_certs: no
   register: plan_requests_json
@@ -22,8 +22,8 @@
 - name: Check transformation plan {{ v2v_ci_migration_plan_name }} active requests status
   uri:
     url: "https://{{ inventory_hostname }}/api/requests?expand=resources&attributes=miq_request_tasks"
-    user: "{{ miq_app_username | default('admin') }}"
-    password: "{{ miq_app_password | default('smartvm') }}"
+    user: "{{ miq_app_username }}"
+    password: "{{ miq_app_password }}"
     method: POST
     validate_certs: no
     body_format: json

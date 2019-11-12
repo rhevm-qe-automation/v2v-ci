@@ -14,7 +14,6 @@
 
 - set_fact:
     vms_per_host: "{{ '1' if v2v_ci_migration_plan_vms|length == 1 else v2v_ci_migration_plan_vms|length / groups['vmware_esx_hosts']|length }}"
-#    vms_per_host: "{{ v2v_ci_migration_plan_vms|length / groups['vmware_esx_hosts']|length }}"
 
 - debug: msg="{{vms_per_host}}"
 
