@@ -3,8 +3,8 @@
     - name: Find host JSON
       uri:
         url: "https://{{ inventory_hostname }}/api/hosts/?filter[]=name={{ hostvars[item].rhv_host_name }}&expand=resources&attributes=authentications"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
       register: host_json
@@ -22,8 +22,8 @@
     - name: Look for conversion host {{ hostvars[item].rhv_host_name }}
       uri:
         url: "https://{{ inventory_hostname }}/api/conversion_hosts/?filter[]=name={{ hostvars[item].rhv_host_name }}&expand=resources"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
       register: conversion_host_json
@@ -39,8 +39,8 @@
         - name: Remove conversion host {{ hostvars[item].rhv_host_name }}
           uri:
             url: "https://{{ inventory_hostname }}/api/conversion_hosts/{{conversion_host_id}}"
-            user: "{{ miq_app_username | default('admin') }}"
-            password: "{{ miq_app_password | default('smartvm') }}"
+            user: "{{ miq_app_username }}"
+            password: "{{ miq_app_password }}"
             method: DELETE
             status_code: 204
             validate_certs: no
@@ -48,8 +48,8 @@
         - name: Wait until conversion host {{ hostvars[item].rhv_host_name }} is removed
           uri:
             url: "https://{{ inventory_hostname }}/api/conversion_hosts/?filter[]=name={{ hostvars[item].rhv_host_name }}&expand=resources"
-            user: "{{ miq_app_username | default('admin') }}"
-            password: "{{ miq_app_password | default('smartvm') }}"
+            user: "{{ miq_app_username }}"
+            password: "{{ miq_app_password }}"
             method: GET
             validate_certs: no
             return_content: yes
@@ -76,8 +76,8 @@
     - name: Enable conversion host {{ hostvars[item].rhv_host_name }}
       uri:
         url: "https://{{ inventory_hostname }}/api/conversion_hosts"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: POST
         validate_certs: no
         body_format: json
@@ -94,13 +94,11 @@
               vmware_ssh_private_key: "{{ vmware_ssh_private_key }}"
       register: enable_conversion_host_json
 
- #   - debug: msg="{{enable_conversion_host_json.json.results[0].task_href}}"
-
     - name: Check enable conversion host task url is valid
       uri:
         url: "https://{{ inventory_hostname }}/api/tasks/?filter[]=id={{enable_conversion_host_json.json.results[0].task_id}}"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
         return_content: yes
@@ -113,8 +111,8 @@
     - name: Check enable conversion host task has ended
       uri:
         url: "{{enable_conversion_host_json.json.results[0].task_href}}"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
       register: task_json

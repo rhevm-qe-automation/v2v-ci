@@ -2,8 +2,8 @@
 - name: Check if transformation mapping already exists
   uri:
     url: "https://{{ inventory_hostname }}/api/transformation_mappings/?filter[]=name={{ v2v_ci_infra_mapping_name }}&expand=resources"
-    user: "{{ miq_app_username | default('admin') }}"
-    password: "{{ miq_app_password | default('smartvm') }}"
+    user: "{{ miq_app_username }}"
+    password: "{{ miq_app_password }}"
     method: GET
     validate_certs: no
   register: transformation_mappings_json
@@ -13,8 +13,8 @@
     - name: Get source cluster ID
       uri:
         url: "https://{{ inventory_hostname }}/api/clusters/?filter[]=name={{ v2v_ci_source_cluster }}&expand=resources"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
       register: src_cluster_json
@@ -29,8 +29,8 @@
     - name: Get target cluster ID
       uri:
         url: "https://{{ inventory_hostname }}/api/clusters/?filter[]=name={{ v2v_ci_target_cluster }}&expand=resources"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
       register: target_cluster_json
@@ -45,8 +45,8 @@
     - name: Get source datastore ID
       uri:
         url: "https://{{ inventory_hostname }}/api/data_stores/?filter[]=name={{ v2v_ci_source_datastore }}&expand=resources"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
       register: src_datastore_json
@@ -61,8 +61,8 @@
     - name: Get target datastore ID
       uri:
         url: "https://{{ inventory_hostname }}/api/data_stores/?filter[]=name={{ v2v_ci_target_datastore }}&expand=resources"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
       register: target_datastore_json
@@ -77,8 +77,8 @@
     - name: Collect source lan ids
       uri:
         url: "https://{{ inventory_hostname }}/api/lans/?filter[]=name={{ v2v_ci_source_lan | regex_replace (' ', '%20') }}&expand=resources&attributes=name"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
       register: lan_ids_json
@@ -93,8 +93,8 @@
     - name: Get target lan ID
       uri:
         url: "https://{{ inventory_hostname }}/api/clusters/{{ target_cluster_id }}?attributes=lans&expand=resources"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
       register: target_lan_json
@@ -109,8 +109,8 @@
     - name: Create Infra Mappings
       uri:
         url: "https://{{ inventory_hostname }}/api/transformation_mappings"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: POST
         validate_certs: no
         body_format: json
