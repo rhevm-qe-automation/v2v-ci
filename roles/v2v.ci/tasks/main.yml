@@ -23,6 +23,7 @@
     - miq_create_vms
 
 - import_tasks: remove_rhv_vms.yml
+  delegate_to: localhost
   connection: local
   tags:
     - remove_rhv_vms
