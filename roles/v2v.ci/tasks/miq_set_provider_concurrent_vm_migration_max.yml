@@ -3,8 +3,8 @@
   - name: Get RHV provider ID
     uri:
       url: "https://{{ inventory_hostname }}/api/providers/?filter[]=name={{ v2v_ci_rhv_name }}&expand=resources"
-      user: "{{ miq_app_username | default('admin') }}"
-      password: "{{ miq_app_password | default('smartvm') }}"
+      user: "{{ miq_app_username }}"
+      password: "{{ miq_app_password }}"
       method: GET
       validate_certs: no
     register: rhv_provider_json
@@ -28,8 +28,8 @@
   - name: Add custom attribute {{ provider_concurrent_max_name }}
     uri:
       url: "https://{{ inventory_hostname }}/api/providers/{{ rhv_provider_id }}/custom_attributes/"
-      user: "{{ miq_app_username | default('admin') }}"
-      password: "{{ miq_app_password | default('smartvm') }}"
+      user: "{{ miq_app_username }}"
+      password: "{{ miq_app_password }}"
       method: POST
       validate_certs: no
       body_format: json

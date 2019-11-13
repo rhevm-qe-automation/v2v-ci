@@ -2,9 +2,9 @@
 - block:
     - name: Collect the list of host authentications
       uri:
-        url: "https://{{ inventory_hostname }}/api/hosts/?filter[]=name={{ item }}&expand=resources&attributes=authentications"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        url: "https://{{ inventory_hostname }}/api/hosts/?filter[]=name={{ hostvars[item].rhv_host_name }}&expand=resources&attributes=authentications"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
       register: host_json
@@ -13,7 +13,7 @@
       delay: 60
 
     - set_fact:
-        query: "resources[?name=='{{ item }}'].id"
+        query: "resources[?name=='{{ hostvars[item].rhv_host_name }}'].id"
 
     - name: Extracting host id from JSON
       set_fact:
@@ -22,8 +22,8 @@
     - name: Add authentication for the host
       uri:
         url: "https://{{ inventory_hostname }}/api/hosts/{{ host_id }}/"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: POST
         validate_certs: no
         body_format: json
@@ -38,8 +38,8 @@
     - name: Remove conversion host tags if exist
       uri:
         url: "https://{{ inventory_hostname }}/api/hosts/{{ host_id }}/tags"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: POST
         validate_certs: no
         body_format: json
@@ -56,8 +56,8 @@
     - name: Tag as conversion host
       uri:
         url: "https://{{ inventory_hostname }}/api/hosts/{{ host_id }}/tags"
-        user: "{{ miq_app_username | default('admin') }}"
-        password: "{{ miq_app_password | default('smartvm') }}"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
         method: POST
         validate_certs: no
         body_format: json
