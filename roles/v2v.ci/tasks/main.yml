@@ -18,7 +18,6 @@
 
 - import_tasks: miq_create_vms.yml
   delegate_to: localhost
-  connection: local
   tags:
     - miq_create_vms
 
@@ -29,7 +28,6 @@
 
 - import_tasks: miq_install_nmon.yml
   delegate_to: localhost
-  connection: local
   tags:
     - miq_install_nmon
 
