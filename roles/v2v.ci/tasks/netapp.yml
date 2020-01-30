@@ -1,0 +1,23 @@
+---
+
+- include: create_igroup.yml
+  with_items:
+      - "{{ igroups }}"
+  loop_control:
+    loop_var: igroups_iter
+  when: ('CREATE_IGROUPS' in assets_to_create)
+
+- include: populate_luns.yml
+  with_items:
+      - "{{ luns }}"
+  loop_control:
+    loop_var: luns_iter
+  when: ('CREATE_LUNS' in assets_to_create)
+
+- include: map_luns_to_igroup.yml
+    status="{{ luns_iter.status }}"
+  with_items:
+      - "{{ luns }}"
+  loop_control:
+    loop_var: luns_iter
+  when: ('MAP_LUNS' in assets_to_create)
