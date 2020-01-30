@@ -15,7 +15,3 @@
 
 - set_fact:
     create_lun_map_result: "{{ create_lun_map_result_reg }}"
-
-- include: '{{role_path}}/tasks/create_record_of_luns_mapping.yml'
-  when: ('create_record_of_luns_mapping' in actions)
-  delegate_to: localhost

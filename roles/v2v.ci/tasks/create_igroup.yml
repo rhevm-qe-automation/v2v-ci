@@ -1,7 +1,4 @@
 ---
-- debug: var=igroups_iter.hosts_groups|list|last
-  when: debug is defined
-
 
 - block:
 
@@ -11,7 +8,7 @@
 
   - include: fetch_wwpn_per_host_in_group.yml
     with_items:
-      - "{{ groups[igroups_iter.hosts_groups|list|last ] }}"
+      -  "{{ groups['ovirt_conversion_hosts'] }}"
     loop_control:
       loop_var: host_iter
 
@@ -26,7 +23,7 @@
 
   - include: fetch_short_fqdn_per_host_in_group.yml
     with_items:
-      - "{{ groups[igroups_iter.hosts_groups|list|last ] }}"
+      -  "{{ groups['ovirt_conversion_hosts'] }}"
     loop_control:
       loop_var: host_iter
 
