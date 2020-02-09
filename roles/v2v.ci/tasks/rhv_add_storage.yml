@@ -1,5 +1,11 @@
 ---
 
+- name: Read luns type parameter
+  set_fact:
+    lun_type: "{{ luns[0]['type'] }}"
+
+- debug: var=lun_type
+
 # Add data iSCSI storage domain:
 - name: Add data iSCSI storage domain
   ovirt_storage_domain:
@@ -17,3 +23,4 @@
        - "{{ '3' + create_lun_map_result['lun_naa_id'] }}"
       address: "{{ iscsi_target_ip }}"
     discard_after_delete: True
+  when: lun_type == 'iscsi'
