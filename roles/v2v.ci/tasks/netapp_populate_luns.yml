@@ -38,4 +38,5 @@
   register: lun_creation_result
 
 - debug: var=lun_creation_result
-  #when: debug is defined
+  when: debug is defined
+
