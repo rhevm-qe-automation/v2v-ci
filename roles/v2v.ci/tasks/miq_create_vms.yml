@@ -1,9 +1,5 @@
 ---
 
-- include: '{{role_path}}/tasks/netapp.yml'
-- include: '{{role_path}}/tasks/rhv_storage_discovery.yml'
-- include: '{{role_path}}/tasks/rhv_add_storage.yml'
-
 # Remove & Create VMs
 - name: Remove VMware source instances if present
   vmware_guest:
