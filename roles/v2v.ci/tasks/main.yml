@@ -26,6 +26,11 @@
   tags:
     - remove_rhv_vms
 
+- import_tasks: rhv_add_storage.yml
+  delegate_to: localhost
+  tags:
+    - rhv_add_storage
+
 - import_tasks: miq_install_nmon.yml
   delegate_to: localhost
   tags:

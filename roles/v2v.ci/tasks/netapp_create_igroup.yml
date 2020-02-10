@@ -6,7 +6,7 @@
     set_fact:
       wwpn_or_short_fqdn_file_path: "/tmp/wwpn_lst_{{ lookup('pipe', 'date \"+%Y-%m-%d_%H-%M-%S\"') }}.csv"
 
-  - include: fetch_wwpn_per_host_in_group.yml
+  - include: netapp_fetch_wwpn_per_host_in_group.yml
     with_items:
       -  "{{ groups['ovirt_conversion_hosts'] }}"
     loop_control:
@@ -21,7 +21,7 @@
     set_fact:
       wwpn_or_short_fqdn_file_path: "/tmp/short_fqdn_lst_{{ lookup('pipe', 'date \"+%Y-%m-%d_%H-%M-%S\"') }}.csv"
 
-  - include: fetch_short_fqdn_per_host_in_group.yml
+  - include: netapp_fetch_short_fqdn_per_host_in_group.yml
     with_items:
       -  "{{ groups['ovirt_conversion_hosts'] }}"
     loop_control:

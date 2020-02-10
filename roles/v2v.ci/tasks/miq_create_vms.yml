@@ -1,7 +1,5 @@
 ---
 
-- include: '{{role_path}}/tasks/netapp.yml'
-
 # Remove & Create VMs
 - name: Remove VMware source instances if present
   vmware_guest:
