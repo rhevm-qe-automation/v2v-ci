@@ -12,6 +12,7 @@ properties(
         string(defaultValue: '', description: 'Image URL e.g. http://file.cloudforms.lab.eng.rdu2.redhat.com/builds/cfme/5.10/stable/cfme-rhevm-5.10.0.33-1.x86_64.qcow2', name: 'CFME_IMAGE_URL'),
         string(defaultValue: '', description: 'RHV hosts selection, separated by a comma e.g. 1,3-5,7. Leave empty to use ALL hosts', name: 'RHV_HOSTS'),
         string(defaultValue: '', description: 'VMware hosts selection, separated by a comma e.g. 1,3-5,7. Leave empty to use ALL hosts', name: 'VMW_HOSTS'),
+        choice(defaultValue: 'iscsi', description: 'Choose Storage Type', name: 'STORAGE_TYPES', choices: ['', 'iscsi', 'fcp']),
         string(defaultValue: '', description: 'The source VMware data storage type. If left empty, the type will be set accordingly to source YML file', name: 'VMW_STORAGE_NAME'),
         string(defaultValue: '', description: 'The target RHV data storage type. If left empty, the type will be set accordingly to source YML file', name: 'RHV_STORAGE_NAME'),
         string(defaultValue: '', description: 'The number of hosts to be migrated', name: 'NUMBER_OF_VMS'),
@@ -106,7 +107,8 @@ pipeline {
                                                         --v2v_ci_source_datastore "$VMW_STORAGE_NAME" \
                                                         --v2v_ci_target_datastore "$RHV_STORAGE_NAME" \
                                                         --job_basename_url $JOB_BASE_NAME \
-                                                        --rhv_ge "$GE_NAME"
+                                                        --rhv_ge "$GE_NAME" \
+                                                        --storage_type $STORAGE_TYPES
 
                 deactivate
                 '''
