@@ -1,14 +1,7 @@
 ---
-# TODO: set a global delegate_to for this task
+
 # iscsi target logout & login to renew the luns discovery
 - block:
-
-  - name: Add host before delegate to it
-    add_host:
-      name: "{{ groups['ovirt_conversion_hosts'][0] }}"
-      ansible_user: root
-      ansible_ssh_pass: "{{ hostvars[groups['ovirt_conversion_hosts'][0]].root_password }}"
-      ansible_pipelining: true
 
   - name: Target logout after LUN creation
     delegate_to: "{{ groups['ovirt_conversion_hosts'][0] }}"
