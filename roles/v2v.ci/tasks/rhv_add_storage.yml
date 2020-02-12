@@ -9,12 +9,12 @@
   with_items:
     - "{{ groups['ovirt_conversion_hosts'] }}"
 
-- debug: var=storage_type
+- debug: var=rhv_storage
 
 - include: '{{role_path}}/tasks/netapp.yml'
 
 - include: '{{role_path}}/tasks/rhv_storage_discovery.yml'
-  when: storage_type == 'iscsi'
+  when: rhv_storage == 'iscsi'
 
 # Add data iSCSI storage domain
 - name: Add data iSCSI storage domain
@@ -33,7 +33,7 @@
        - "{{ '3' + create_lun_map_result['lun_naa_id'] }}"
       address: "{{ iscsi_target_ip }}"
     discard_after_delete: True
-  when: storage_type == 'iscsi'
+  when: rhv_storage == 'iscsi'
 
 
 # Add data FCP storage domain
@@ -51,4 +51,4 @@
       lun_id:
        - "{{ '3' + create_lun_map_result['lun_naa_id'] }}"
     discard_after_delete: True
-  when: storage_type == 'fcp'
+  when: rhv_storage == 'fcp'
