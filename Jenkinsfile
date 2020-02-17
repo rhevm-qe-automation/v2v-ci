@@ -4,12 +4,12 @@ properties(
   [
     parameters(
       [
-        string(defaultValue: 'v2v-node', description: 'Name or label of slave to run on', name: 'NODE_LABEL'),
+        string(defaultValue: 'v2v-node-rdu', description: 'Name or label of slave to run on', name: 'NODE_LABEL'),
         booleanParam(defaultValue: false, description: 'Nightly pre check', name: 'MIQ_NIGHTLY_PRE_CHECK'),
         booleanParam(defaultValue: false, description: 'Remove existing instance', name: 'MIQ_REMOVE_EXISTING_INSTANCE'),
         string(defaultValue: '', description: 'Name of GE or label that match the desired GE.', name: 'GE_NAME'),
         string(defaultValue: '', description: 'The name of the main YAML file e.g. v2v-1. The file placed under rhevm-jenkins/qe/v2v/', name: 'SOURCE_YAML'),
-        choice(defaultValue: '', description: 'Choose the environment. If left empty, the environment will be set accordingly to source YML file', name: 'ENVIRONMENT', choices: ['', 'RDU', 'TLV']),
+        choice(defaultValue: 'RDU', description: 'Choose the environment. If left empty, the environment will be set accordingly to source YML file', name: 'ENVIRONMENT', choices: ['RDU', 'TLV']),
         string(defaultValue: '', description: 'Image URL e.g. http://file.cloudforms.lab.eng.rdu2.redhat.com/builds/cfme/5.10/stable/cfme-rhevm-5.10.0.33-1.x86_64.qcow2', name: 'CFME_IMAGE_URL'),
         string(defaultValue: '', description: 'RHV hosts selection, separated by a comma e.g. 1,3-5,7. Leave empty to use ALL hosts', name: 'RHV_HOSTS'),
         string(defaultValue: '', description: 'VMware hosts selection, separated by a comma e.g. 1,3-5,7. Leave empty to use ALL hosts', name: 'VMW_HOSTS'),
@@ -17,7 +17,7 @@ properties(
         string(defaultValue: '', description: 'The source VMware data storage name. If left empty, the name will be set accordingly to source YML file', name: 'VMW_STORAGE_NAME'),
         string(defaultValue: '', description: 'The target RHV data storage name. If left empty, the name will be set accordingly to source YML file', name: 'RHV_STORAGE_NAME'),
         string(defaultValue: '', description: 'The number of hosts to be migrated', name: 'NUMBER_OF_VMS'),
-        string(defaultValue: 'regression_v2v_76_100_oct_2018', description: 'VMware Template name', name: 'VMW_TEMPLATE_NAME'),
+        string(defaultValue: '', description: 'VMware Template name', name: 'VMW_TEMPLATE_NAME'),
         choice(defaultValue: 'VDDK', description: 'Migration Protocol - SSH/VDDK', name: 'TRANSPORT_METHODS', choices: ['VDDK', 'SSH']),
         string(defaultValue: '20', description: 'Provider concurrent migration max num of VMs', name: 'PROVIDER_CONCURRENT_MAX'),
         string(defaultValue: '10', description: 'Host concurrent migration max num of VMs', name: 'HOST_CONCURRENT_MAX'),
