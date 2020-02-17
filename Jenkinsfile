@@ -9,6 +9,7 @@ properties(
         booleanParam(defaultValue: false, description: 'Remove existing instance', name: 'MIQ_REMOVE_EXISTING_INSTANCE'),
         string(defaultValue: '', description: 'Name of GE or label that match the desired GE.', name: 'GE_NAME'),
         string(defaultValue: '', description: 'The name of the main YAML file e.g. v2v-1. The file placed under rhevm-jenkins/qe/v2v/', name: 'SOURCE_YAML'),
+        choice(defaultValue: '', description: 'Choose the environment. If left empty, the environment will be set accordingly to source YML file', name: 'ENVIRONMENT', choices: ['', 'RDU', 'TLV']),
         string(defaultValue: '', description: 'Image URL e.g. http://file.cloudforms.lab.eng.rdu2.redhat.com/builds/cfme/5.10/stable/cfme-rhevm-5.10.0.33-1.x86_64.qcow2', name: 'CFME_IMAGE_URL'),
         string(defaultValue: '', description: 'RHV hosts selection, separated by a comma e.g. 1,3-5,7. Leave empty to use ALL hosts', name: 'RHV_HOSTS'),
         string(defaultValue: '', description: 'VMware hosts selection, separated by a comma e.g. 1,3-5,7. Leave empty to use ALL hosts', name: 'VMW_HOSTS'),
@@ -108,7 +109,8 @@ pipeline {
                                                         --v2v_ci_target_datastore "$RHV_STORAGE_NAME" \
                                                         --job_basename_url $JOB_BASE_NAME \
                                                         --rhv_ge "$GE_NAME" \
-                                                        --rhv_storage $RHV_STORAGE
+                                                        --rhv_storage "$RHV_STORAGE" \
+                                                        --v2v_ci_environment "$ENVIRONMENT"
 
                 deactivate
                 '''
