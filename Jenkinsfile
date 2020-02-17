@@ -202,7 +202,10 @@ pipeline {
 
         stage ('Add RHV Storage') {
           when {
-            expression { stages_['Add RHV Storage'] }
+            allOf {
+              expression { stages_['Add RHV Storage'] }
+              expression { params.ENVIRONMENT == 'RDU'}
+            }
           }
           steps {
             v2v_ansible(
