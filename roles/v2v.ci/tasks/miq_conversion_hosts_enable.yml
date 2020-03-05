@@ -3,7 +3,7 @@
 
     - name: Getting Conversion VM ID
       uri:
-        url: "https://{{ inventory_hostname }}/api/vms?expand=resources&attributes=name&filter[]=name=conversion_vm_0403_image_5.11.4.1-1_deployed_only"
+        url: "https://{{ inventory_hostname }}/api/vms?expand=resources&attributes=name&filter[]=name={{ hostvars[item].rhv_vm_name }}"
         user: "{{ miq_app_username }}"
         password: "{{ miq_app_password }}"
         method: GET
@@ -16,7 +16,7 @@
 
     - debug:
         var: conv_vm_id
-#
+
 #    - name: Find host JSON
 #      uri:
 #        url: "https://{{ inventory_hostname }}/api/hosts/?filter[]=name={{ hostvars[item].rhv_host_name }}&expand=resources&attributes=authentications"
@@ -36,45 +36,45 @@
 #      set_fact:
 #        host_id: "{{ host_json.json | json_query(query) | first }}"
 
-#    - name: Look for conversion host {{ hostvars[item].rhv_host_name }}
-#      uri:
-#        url: "https://{{ inventory_hostname }}/api/conversion_hosts/?filter[]=name={{ hostvars[item].rhv_host_name }}&expand=resources"
-#        user: "{{ miq_app_username }}"
-#        password: "{{ miq_app_password }}"
-#        method: GET
-#        validate_certs: no
-#      register: conversion_host_json
-#
-#    - block:
-#        - set_fact:
-#            query: "resources[?name=='{{ hostvars[item].rhv_host_name }}'].id"
-#
-#        - name: Extract conversion host ID from JSON
-#          set_fact:
-#             conversion_host_id: "{{ conversion_host_json.json | json_query(query) | first }}"
-#
-#        - name: Remove conversion host {{ hostvars[item].rhv_host_name }}
-#          uri:
-#            url: "https://{{ inventory_hostname }}/api/conversion_hosts/{{conversion_host_id}}"
-#            user: "{{ miq_app_username }}"
-#            password: "{{ miq_app_password }}"
-#            method: DELETE
-#            status_code: 204
-#            validate_certs: no
-#
-#        - name: Wait until conversion host {{ hostvars[item].rhv_host_name }} is removed
-#          uri:
-#            url: "https://{{ inventory_hostname }}/api/conversion_hosts/?filter[]=name={{ hostvars[item].rhv_host_name }}&expand=resources"
-#            user: "{{ miq_app_username }}"
-#            password: "{{ miq_app_password }}"
-#            method: GET
-#            validate_certs: no
-#            return_content: yes
-#          register: conversion_host_post_remove_json
-#          until: conversion_host_post_remove_json.json.subcount == 0
-#          retries: 60
-#          delay: 30
-#      when: conversion_host_json.json.subcount != 0
+    - name: Look for conversion host VM {{ hostvars[item].rhv_vm_name }}
+      uri:
+        url: "https://{{ inventory_hostname }}/api/conversion_hosts/?filter[]=name={{ hostvars[item].rhv_vm_name }}&expand=resources"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
+        method: GET
+        validate_certs: no
+      register: conversion_host_json
+
+    - block:
+        - set_fact:
+            query: "resources[?name=='{{ hostvars[item].rhv_vm_name }}'].id"
+
+        - name: Extract conversion host ID from JSON
+          set_fact:
+             conversion_host_id: "{{ conversion_host_json.json | json_query(query) | first }}"
+
+        - name: Remove conversion host VM {{ hostvars[item].rhv_vm_name }}
+          uri:
+            url: "https://{{ inventory_hostname }}/api/conversion_hosts/{{conversion_host_id}}"
+            user: "{{ miq_app_username }}"
+            password: "{{ miq_app_password }}"
+            method: DELETE
+            status_code: 204
+            validate_certs: no
+
+        - name: Wait until conversion host VM {{ hostvars[item].rhv_vm_name }} is removed
+          uri:
+            url: "https://{{ inventory_hostname }}/api/conversion_hosts/?filter[]=name={{ hostvars[item].rhv_vm_name }}&expand=resources"
+            user: "{{ miq_app_username }}"
+            password: "{{ miq_app_password }}"
+            method: GET
+            validate_certs: no
+            return_content: yes
+          register: conversion_host_post_remove_json
+          until: conversion_host_post_remove_json.json.subcount == 0
+          retries: 60
+          delay: 30
+      when: conversion_host_json.json.subcount != 0
 
     - name: Add RHV Engine host to inventory
       add_host:
@@ -95,7 +95,7 @@
 
 #    - debug: msg="{{ca_certs_file.stdout}}"
 
-    - name: Enable conversion host {{ hostvars[item].rhv_host_name }}
+    - name: Enable conversion host {{ hostvars[item].rhv_vm_name }}
       uri:
         url: "https://{{ inventory_hostname }}/api/conversion_hosts"
         user: "{{ miq_app_username }}"
@@ -106,7 +106,7 @@
         body:
           action: create
           resources:
-            - name: "conversion_vm_0403_image_5.11.4.1-1_deployed_only"
+            - name: "{{ hostvars[item].rhv_vm_name }}"
               resource_type: "ManageIQ::Providers::Redhat::InfraManager::Vm"
               resource_id: "{{ conv_vm_id }}"
               max_concurrent_tasks: "{{ v2v_max_concurrent_conversions }}"
