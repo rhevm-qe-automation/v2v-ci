@@ -1,0 +1,25 @@
+---
+
+- name: Add RHV host / conversion VM {{ item }}
+  add_host:
+    name: "{{ item }}"
+    ansible_user: root
+    ansible_ssh_pass: "{{ hostvars[item].root_password }}"
+    ansible_pipelining: true
+
+- name: Delete RHV logs
+  delegate_to: "{{ item }}"
+  script: roles/v2v.ci/files/del_logs.sh
+
+- name: Copy shell script
+  delegate_to: "{{ item }}"
+  copy:
+    src: roles/v2v.ci/files/conv_host_start_log.sh
+    dest: /tmp/conv_host_start_log.sh
+    mode: 0777
+
+- name: Start Collecting RHV logs
+  delegate_to: "{{ item }}"
+  command: sh /tmp/conv_host_start_log.sh "v2v_test"
+  async: 600
+  poll: 5
