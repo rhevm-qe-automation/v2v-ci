@@ -11,15 +11,40 @@
   delegate_to: "{{ item }}"
   script: roles/v2v.ci/files/del_logs.sh
 
-- name: Copy shell script
-  delegate_to: "{{ item }}"
-  copy:
-    src: roles/v2v.ci/files/conv_host_start_log.sh
-    dest: /tmp/conv_host_start_log.sh
-    mode: 0777
+- name: Setting fact in order to use it in block condition
+  set_fact:
+    rhv_host_or_conversion_vm: "{{ item }}"
 
-- name: Start Collecting RHV logs
-  delegate_to: "{{ item }}"
-  command: sh /tmp/conv_host_start_log.sh "v2v_test"
-  async: 600
-  poll: 5
+- block:
+    - name: Copy shell script to RHV host
+      delegate_to: "{{ item }}"
+      copy:
+        src: roles/v2v.ci/files/conv_host_start_log.sh
+        dest: /tmp/conv_host_start_log.sh
+        mode: 0777
+
+    - name: Start Collecting RHV host logs
+      delegate_to: "{{ item }}"
+      command: sh /tmp/conv_host_start_log.sh "v2v_test"
+      async: 600
+      poll: 5
+  when: rhv_host_or_conversion_vm in groups['ovirt_conversion_hosts']
+
+- block:
+    - name: Copy shell script to RHV conversion VM
+      delegate_to: "{{ item }}"
+      copy:
+        src: roles/v2v.ci/files/conv_vm_start_log.sh
+        dest: /tmp/conv_vm_start_log.sh
+        mode: 0777
+
+    - name: Start Collecting RHV conversion VM logs
+      delegate_to: "{{ item }}"
+      command: sh /tmp/conv_vm_start_log.sh "v2v_test"
+      async: 600
+      poll: 5
+  when: rhv_host_or_conversion_vm in groups['ovirt_conversion_host_vms']
+
+
+
+
