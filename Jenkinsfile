@@ -374,6 +374,7 @@ pipeline {
             )
             archiveArtifacts artifacts: 'cfme_logs/*.tar.gz'
             archiveArtifacts artifacts: 'conv_logs/*.tar.gz'
+            archiveArtifacts artifacts: 'conv_vm_logs/*.tar.gz'
         }
       }
     }
