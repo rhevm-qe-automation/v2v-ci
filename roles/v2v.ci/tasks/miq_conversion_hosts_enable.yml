@@ -115,6 +115,7 @@
               conversion_host_ssh_private_key: "{{ ssh_key.stdout }}"
               vmware_ssh_private_key: "{{ vmware_ssh_private_key }}"
               tls_ca_certs: "{{ ca_certs_file.stdout }}"
+              address: "{{ hostvars[item].ip_address }}"
       register: enable_conversion_host_json
 
     - name: Check enable conversion host task url is valid
