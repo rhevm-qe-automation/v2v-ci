@@ -3,12 +3,15 @@
 
     - name: Getting Conversion VM ID
       uri:
-        url: "https://{{ inventory_hostname }}/api/vms?expand=resources&attributes=name&filter[]=name={{ hostvars[item].rhv_vm_name }}"
+        url: "https://{{ inventory_hostname }}/api/vms?expand=resources&attributes=name&filter[]=name={{ hostvars[item].rhv_vm_name }}&filter[]=vendor=redhat&filter[]=ems_id!=null"
         user: "{{ miq_app_username }}"
         password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
       register: conversion_vm_details
+      until: conversion_vm_details.json.subcount == 1
+      retries: 30
+      delay: 60
 
     - name: Extracting VM ID
       set_fact:
@@ -16,25 +19,6 @@
 
     - debug:
         var: conv_vm_id
-
-#    - name: Find host JSON
-#      uri:
-#        url: "https://{{ inventory_hostname }}/api/hosts/?filter[]=name={{ hostvars[item].rhv_host_name }}&expand=resources&attributes=authentications"
-#        user: "{{ miq_app_username }}"
-#        password: "{{ miq_app_password }}"
-#        method: GET
-#        validate_certs: no
-#      register: host_json
-#      until: host_json.json.subcount == 1
-#      retries: 30
-#      delay: 60
-#
-#    - set_fact:
-#        query: "resources[?name=='{{ hostvars[item].rhv_host_name }}'].id"
-#
-#    - name: Extracting host id from JSON
-#      set_fact:
-#        host_id: "{{ host_json.json | json_query(query) | first }}"
 
     - name: Look for conversion host VM {{ hostvars[item].rhv_vm_name }}
       uri:
