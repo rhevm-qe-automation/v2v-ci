@@ -1,7 +1,7 @@
 ---
 - block:
 
-    - name: Getting Conversion VM ID
+    - name: Find Conversion VM JSON
       uri:
         url: "https://{{ inventory_hostname }}/api/vms?expand=resources&attributes=name&filter[]=name={{ hostvars[item].rhv_vm_name }}&filter[]=vendor=redhat&filter[]=ems_id!=null"
         user: "{{ miq_app_username }}"
@@ -13,12 +13,12 @@
       retries: 30
       delay: 60
 
-    - name: Extracting VM ID
-      set_fact:
-        conv_vm_id: "{{ conversion_vm_details['json']['resources'][0]['id'] }}"
+    - set_fact:
+        query: "resources[?name=='{{ hostvars[item].rhv_vm_name }}'].id"
 
-    - debug:
-        var: conv_vm_id
+    - name: Extracting Conversion VM ID from JSON
+      set_fact:
+        conv_vm_id: "{{ conversion_vm_details.json | json_query(query) | first }}"
 
     - name: Look for conversion host VM {{ hostvars[item].rhv_vm_name }}
       uri:
@@ -67,6 +67,8 @@
         ansible_ssh_pass: "{{ v2v_ci_rhv_root_password }}"
         ansible_pipelining: true
 
+    # Note: Temporarily, these keys are taken from RHV Engine
+    #       Once we will automate the UCI VMs creation - they will be taken from localhost
     - name: Read RHV Engine SSH RSA Private key file /root/.ssh/id_rsa
       delegate_to: "{{ v2v_ci_rhv_hostname }}"
       shell: tail -n +4 /root/.ssh/id_rsa
@@ -76,8 +78,6 @@
       delegate_to: "{{ v2v_ci_rhv_hostname }}"
       shell: tail -n +4 /etc/pki/ovirt-engine/apache-ca.pem
       register: ca_certs_file
-
-#    - debug: msg="{{ca_certs_file.stdout}}"
 
     - name: Enable conversion host {{ hostvars[item].rhv_vm_name }}
       uri:
