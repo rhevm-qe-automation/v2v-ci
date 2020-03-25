@@ -1,43 +1,34 @@
 ---
 - block:
-  - name: Get RHV provider ID
+  - name: Get Region ID
     uri:
-      url: "https://{{ inventory_hostname }}/api/providers/?filter[]=name={{ v2v_ci_rhv_name }}&expand=resources"
+      url: "https://{{ inventory_hostname }}/api/regions/?filter[]=region=0&expand=resources"
       user: "{{ miq_app_username }}"
       password: "{{ miq_app_password }}"
       method: GET
       validate_certs: no
-    register: rhv_provider_json
+    register: region_json
 
   - set_fact:
-      query: "resources[?name=='{{ v2v_ci_rhv_name }}'].id"
+      query: "resources[?description=='Region 0'].id"
 
-  - name: Extracting RHV provider id from JSON
+  - name: Extracting Region id from JSON
     set_fact:
-      rhv_provider_id: "{{ rhv_provider_json.json | json_query(query) | first }}"
+      region_id: "{{ region_json.json | json_query(query) | first }}"
 
-  - name: Get custom attribute {{ provider_concurrent_max_name }}
+  - name: Set max_concurrent_tasks_per_ems value
     uri:
-      url: "https://{{ inventory_hostname }}/api/providers/{{ rhv_provider_id }}/custom_attributes/?filter[]=name={{ provider_concurrent_max_name | regex_replace(' ', '%20') }}"
+      url: "https://{{ inventory_hostname }}/api/regions/{{ region_id }}/settings/"
       user: "{{ miq_app_username }}"
       password: "{{ miq_app_password }}"
-      method: GET
-      validate_certs: no
-    register: max_transorm_runners_json
-
-  - name: Add custom attribute {{ provider_concurrent_max_name }}
-    uri:
-      url: "https://{{ inventory_hostname }}/api/providers/{{ rhv_provider_id }}/custom_attributes/"
-      user: "{{ miq_app_username }}"
-      password: "{{ miq_app_password }}"
-      method: POST
+      method: PATCH
       validate_certs: no
       body_format: json
       body:
-        action: add
-        resource:
-          name: "{{ provider_concurrent_max_name }}"
-          value: "{{ provider_concurrent_max }}"
+        action: edit
+        transformation:
+          limits:
+            max_concurrent_tasks_per_ems: "{{ provider_concurrent_max }}"
 
   tags:
     - miq_set_provider_concurrent_vm_migration_max

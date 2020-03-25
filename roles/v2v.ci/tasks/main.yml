@@ -61,7 +61,7 @@
 
 - include_tasks: miq_conversion_hosts_enable.yml
   with_items:
-     -  "{{ groups['ovirt_conversion_hosts'] }}"
+     -  "{{ groups['ovirt_conversion_host_vms'] }}"
   tags:
     - miq_conversion_hosts_enable
 
