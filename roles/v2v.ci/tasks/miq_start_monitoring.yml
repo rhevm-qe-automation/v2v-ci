@@ -10,6 +10,5 @@
   with_items:
     - "{{ groups['ovirt_conversion_hosts'] }}"
     - "{{ groups['ovirt_conversion_host_vms'] }}"
-
-
-
+  loop_control:
+    loop_var: rhv_item
