@@ -1,27 +1,28 @@
 ---
 - block:
-    - name: Find host JSON
+
+    - name: Find Conversion VM JSON
       uri:
-        url: "https://{{ inventory_hostname }}/api/hosts/?filter[]=name={{ hostvars[item].rhv_host_name }}&expand=resources&attributes=authentications"
+        url: "https://{{ inventory_hostname }}/api/vms?expand=resources&attributes=name&filter[]=name={{ hostvars[item].rhv_vm_name }}&filter[]=vendor=redhat&filter[]=ems_id!=null"
         user: "{{ miq_app_username }}"
         password: "{{ miq_app_password }}"
         method: GET
         validate_certs: no
-      register: host_json
-      until: host_json.json.subcount == 1
+      register: conversion_vm_details
+      until: conversion_vm_details.json.subcount == 1
       retries: 30
       delay: 60
 
     - set_fact:
-        query: "resources[?name=='{{ hostvars[item].rhv_host_name }}'].id"
+        query: "resources[?name=='{{ hostvars[item].rhv_vm_name }}'].id"
 
-    - name: Extracting host id from JSON
+    - name: Extracting Conversion VM ID from JSON
       set_fact:
-        host_id: "{{ host_json.json | json_query(query) | first }}"
+        conv_vm_id: "{{ conversion_vm_details.json | json_query(query) | first }}"
 
-    - name: Look for conversion host {{ hostvars[item].rhv_host_name }}
+    - name: Look for conversion host VM {{ hostvars[item].rhv_vm_name }}
       uri:
-        url: "https://{{ inventory_hostname }}/api/conversion_hosts/?filter[]=name={{ hostvars[item].rhv_host_name }}&expand=resources"
+        url: "https://{{ inventory_hostname }}/api/conversion_hosts/?filter[]=name={{ hostvars[item].rhv_vm_name }}&expand=resources"
         user: "{{ miq_app_username }}"
         password: "{{ miq_app_password }}"
         method: GET
@@ -30,13 +31,13 @@
 
     - block:
         - set_fact:
-            query: "resources[?name=='{{ hostvars[item].rhv_host_name }}'].id"
+            query: "resources[?name=='{{ hostvars[item].rhv_vm_name }}'].id"
 
         - name: Extract conversion host ID from JSON
           set_fact:
              conversion_host_id: "{{ conversion_host_json.json | json_query(query) | first }}"
 
-        - name: Remove conversion host {{ hostvars[item].rhv_host_name }}
+        - name: Remove conversion host VM {{ hostvars[item].rhv_vm_name }}
           uri:
             url: "https://{{ inventory_hostname }}/api/conversion_hosts/{{conversion_host_id}}"
             user: "{{ miq_app_username }}"
@@ -45,9 +46,9 @@
             status_code: 204
             validate_certs: no
 
-        - name: Wait until conversion host {{ hostvars[item].rhv_host_name }} is removed
+        - name: Wait until conversion host VM {{ hostvars[item].rhv_vm_name }} is removed
           uri:
-            url: "https://{{ inventory_hostname }}/api/conversion_hosts/?filter[]=name={{ hostvars[item].rhv_host_name }}&expand=resources"
+            url: "https://{{ inventory_hostname }}/api/conversion_hosts/?filter[]=name={{ hostvars[item].rhv_vm_name }}&expand=resources"
             user: "{{ miq_app_username }}"
             password: "{{ miq_app_password }}"
             method: GET
@@ -66,14 +67,19 @@
         ansible_ssh_pass: "{{ v2v_ci_rhv_root_password }}"
         ansible_pipelining: true
 
-    - name: Read RHV Engine SSH Private key
+    # Note: Temporarily, these keys are taken from RHV Engine
+    #       Once we will automate the UCI VMs creation - they will be taken from localhost
+    - name: Read RHV Engine SSH RSA Private key file /root/.ssh/id_rsa
       delegate_to: "{{ v2v_ci_rhv_hostname }}"
-      shell: tail -n +4 /etc/pki/ovirt-engine/keys/engine_id_rsa
+      shell: tail -n +4 /root/.ssh/id_rsa
       register: ssh_key
 
-#    - debug: msg="{{ssh_key.stdout}}"
+    - name: Read RHV Engine CA certificates bundle file /etc/pki/ovirt-engine/apache-ca.pem
+      delegate_to: "{{ v2v_ci_rhv_hostname }}"
+      shell: tail -n +4 /etc/pki/ovirt-engine/apache-ca.pem
+      register: ca_certs_file
 
-    - name: Enable conversion host {{ hostvars[item].rhv_host_name }}
+    - name: Enable conversion host {{ hostvars[item].rhv_vm_name }}
       uri:
         url: "https://{{ inventory_hostname }}/api/conversion_hosts"
         user: "{{ miq_app_username }}"
@@ -84,14 +90,16 @@
         body:
           action: create
           resources:
-            - name: "{{ hostvars[item].rhv_host_name }}"
-              resource_type: "ManageIQ::Providers::Redhat::InfraManager::Host"
-              resource_id: "{{ host_id }}"
+            - name: "{{ hostvars[item].rhv_vm_name }}"
+              resource_type: "ManageIQ::Providers::Redhat::InfraManager::Vm"
+              resource_id: "{{ conv_vm_id }}"
               max_concurrent_tasks: "{{ v2v_max_concurrent_conversions }}"
-              auth_user: "root"
+              auth_user: "cloud-user"
               vmware_vddk_package_url: "{{ vmware_vddk_package_url }}"
               conversion_host_ssh_private_key: "{{ ssh_key.stdout }}"
               vmware_ssh_private_key: "{{ vmware_ssh_private_key }}"
+              tls_ca_certs: "{{ ca_certs_file.stdout }}"
+              address: "{{ hostvars[item].ip_address }}"
       register: enable_conversion_host_json
 
     - name: Check enable conversion host task url is valid
