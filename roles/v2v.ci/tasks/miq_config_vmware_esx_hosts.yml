@@ -34,5 +34,19 @@
               auth_type: default
               userid: root
               password: "{{ hostvars[item].root_password }}"
+
+    - name: Set IP address that will serve for the data path in VM migration
+      uri:
+        url: "https://{{ inventory_hostname }}/api/hosts/{{ host_id }}/custom_attributes/"
+        user: "{{ miq_app_username }}"
+        password: "{{ miq_app_password }}"
+        method: POST
+        validate_certs: no
+        body_format: json
+        body:
+          action: add
+          resources:
+            - name: "TransformationIPAddress"
+              value: "{{ hostvars[item].data_path_ip }}"
   tags:
     - miq_config_vmware_esx_hosts
