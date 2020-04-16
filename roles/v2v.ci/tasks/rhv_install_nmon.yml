@@ -1,0 +1,37 @@
+---
+
+- name: Add {{ rhv_item }}
+  add_host:
+    name: "{{ rhv_item }}"
+    ansible_user: root
+    ansible_ssh_pass: "{{ hostvars[rhv_item].root_password }}"
+    ansible_pipelining: true
+
+# Install Nmon
+- name: Gathering facts
+  delegate_to: "{{ rhv_item }}"
+  setup:
+
+- name: Copy {{ nmon_file_rhel7 }} to {{ rhv_item }}
+  delegate_to: "{{ rhv_item }}"
+  copy:
+    src: "{{ nmon_local_dir }}/{{ nmon_file_rhel7 }}"
+    dest: "{{ nmon_location }}"
+    mode: "0777"
+  when: ansible_distribution_major_version == '7'
+
+# Install Nmon requirements for RHEL 8
+- block:
+    - name: Copy {{ nmon_file_rhel8 }} to {{ rhv_item }}
+      delegate_to: "{{ rhv_item }}"
+      copy:
+        src: "{{ nmon_local_dir }}/{{ nmon_file_rhel8 }}"
+        dest: "{{ nmon_location }}"
+        mode: "0777"
+
+    - name: Ensure ncurses packages are installed
+      delegate_to: "{{ rhv_item }}"
+      yum:
+        name: 'libncurses*'
+        state: present
+  when: ansible_distribution_major_version == '8'
