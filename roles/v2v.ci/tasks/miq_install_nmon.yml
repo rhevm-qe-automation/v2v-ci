@@ -23,40 +23,11 @@
         dest: "{{ nmon_local_dir }}"
   when: nmon_file_exist.stat.exists == false
 
-# Install Nmon on CFME
-- name: Gathering facts
-  delegate_to: "{{ miq_vm_name }}.{{ miq_vm_dns_domain }}"
-  setup:
-
-- name: Copy {{ nmon_file_rhel7 }} to CFME machine
-  delegate_to: "{{ miq_vm_name }}.{{ miq_vm_dns_domain }}"
-  copy:
-    src: "{{ nmon_local_dir }}/{{ nmon_file_rhel7 }}"
-    dest: "{{ nmon_location }}"
-    mode: "0777"
-  when: ansible_distribution_major_version == '7'
-
-# Install Nmon requirements for RHEL 8
-- block:
-    - name: Copy {{ nmon_file_rhel8 }} to CFME machine
-      delegate_to: "{{ miq_vm_name }}.{{ miq_vm_dns_domain }}"
-      copy:
-        src: "{{ nmon_local_dir }}/{{ nmon_file_rhel8 }}"
-        dest: "{{ nmon_location }}"
-        mode: "0777"
-
-    - name: Ensure ncurses packages are installed
-      delegate_to: "{{ miq_vm_name }}.{{ miq_vm_dns_domain }}"
-      yum:
-        name: 'libncurses*'
-        state: present
-  when: ansible_distribution_major_version == '8'
-
-
-# Install Nmon on RHV hosts and conversion VMs
-- include_tasks: rhv_install_nmon.yml
+# Install Nmon on CFME, RHV hosts and conversion VMs
+- include_tasks: nmon_installation.yml
   with_items:
+    - "{{ miq_vm_name }}.{{ miq_vm_dns_domain }}"
     - "{{ groups['ovirt_conversion_hosts'] }}"
     - "{{ groups['ovirt_conversion_host_vms'] }}"
   loop_control:
-    loop_var: rhv_item
+    loop_var: v2v_item
