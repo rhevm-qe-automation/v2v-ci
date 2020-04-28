@@ -24,7 +24,8 @@
       password: "{{ v2v_ci_rhv_password }}"
       hostname: "{{ v2v_ci_rhv_hostname }}"
       insecure: yes
-    name: data_iscsi_domain
+    name: "{{ storage_domain_name }}"
+    state: present
     host: "{{ groups['ovirt_conversion_hosts'][0] }}"
     data_center: "{{ data_center_name }}"
     iscsi:
@@ -33,8 +34,8 @@
        - "{{ '3' + create_lun_map_result['lun_naa_id'] }}"
       address: "{{ iscsi_target_ip }}"
     discard_after_delete: True
+    wipe_after_delete: True
   when: rhv_storage == 'iscsi'
-
 
 # Add data FCP storage domain
 - name: Add data FCP storage domain
@@ -44,11 +45,13 @@
       password: "{{ v2v_ci_rhv_password }}"
       hostname: "{{ v2v_ci_rhv_hostname }}"
       insecure: yes
-    name: data_fc_domain
+    name: "{{ storage_domain_name }}"
+    state: present
     host: "{{ groups['ovirt_conversion_hosts'][0] }}"
     data_center: "{{ data_center_name }}"
     fcp:
       lun_id:
        - "{{ '3' + create_lun_map_result['lun_naa_id'] }}"
     discard_after_delete: True
+    wipe_after_delete: True
   when: rhv_storage == 'fcp'
