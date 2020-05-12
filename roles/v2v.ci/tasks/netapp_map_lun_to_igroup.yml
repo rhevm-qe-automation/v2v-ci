@@ -1,0 +1,16 @@
+---
+# Detailed explanation of how this works is in https://projects.engineering.redhat.com/browse/RHV-2867
+
+- name: Create LUN mapping
+  na_ontap_lun_map:
+    state: present
+    initiator_group_name: "{{ lun.igroup }}"
+    path:  "/vol/{{ fact_new_random_lun_name }}_vol/{{ fact_new_random_lun_name }}"
+    vserver: "{{ lun.vserver }}"
+    hostname: "{{ netapp_hostname }}"
+    username: "{{ netapp_username }}"
+    password: "{{ netapp_password }}"
+  register: create_lun_map_result_reg
+
+- set_fact:
+    create_lun_map_result: "{{ create_lun_map_result_reg }}"

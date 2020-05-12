@@ -23,10 +23,10 @@
       password: "{{ v2v_ci_rhv_password }}"
       hostname: "{{ v2v_ci_rhv_hostname }}"
       insecure: yes
-    name: "{{ storage_domain_name }}"
+    name: "{{ rhv_storage_domain_name }}"
     state: present
     host: "{{ groups['ovirt_conversion_hosts'][0] }}"
-    data_center: "{{ data_center_name }}"
+    data_center: "{{ rhv_data_center_name }}"
     iscsi:
       target: "{{ iscsi_target_wwn }}"
       lun_id:
@@ -44,10 +44,10 @@
       password: "{{ v2v_ci_rhv_password }}"
       hostname: "{{ v2v_ci_rhv_hostname }}"
       insecure: yes
-    name: "{{ storage_domain_name }}"
+    name: "{{ rhv_storage_domain_name }}"
     state: present
     host: "{{ groups['ovirt_conversion_hosts'][0] }}"
-    data_center: "{{ data_center_name }}"
+    data_center: "{{ rhv_data_center_name }}"
     fcp:
       lun_id:
        - "{{ '3' + create_lun_map_result['lun_naa_id'] }}"

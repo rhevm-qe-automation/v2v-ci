@@ -5,6 +5,7 @@ properties(
     parameters(
       [
         string(defaultValue: 'v2v-node-rdu', description: 'Name or label of slave to run on', name: 'NODE_LABEL'),
+        booleanParam(defaultValue: false, description: 'Recreating RHV Storage Domain', name: 'RHV_RECREATE_STORAGE'),
         booleanParam(defaultValue: false, description: 'Nightly pre check', name: 'MIQ_NIGHTLY_PRE_CHECK'),
         booleanParam(defaultValue: false, description: 'Remove existing instance', name: 'MIQ_REMOVE_EXISTING_INSTANCE'),
         string(defaultValue: '', description: 'Name of GE or label that match the desired GE.', name: 'GE_NAME'),
@@ -114,6 +115,20 @@ pipeline {
 
                 deactivate
                 '''
+          }
+        }
+
+        stage ("oVirt/RHV Recreate Storage Domain") {
+          when {
+            expression { params.RHV_RECREATE_STORAGE }
+          }
+          steps {
+            v2v_ansible(
+              playbook: "miq_run_step.yml",
+              extraVars: ['@extra_vars.yml', 'rhv_recreate_storage_domain=true'],
+              tags: ['rhv_recreate_storage'],
+              verbosity: params.VERBOSITY_LEVEL
+            )
           }
         }
 

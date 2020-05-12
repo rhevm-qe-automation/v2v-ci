@@ -1,0 +1,41 @@
+---
+- debug: var=lun
+- debug:
+    msg: "{{ (lun.size * (1 + lun.vol_percent_snapshot_space)) | round(0,'ceil') | int}}"
+
+- name: Create FlexVol
+  na_ontap_volume:
+    state: present
+    name: "{{ fact_new_random_lun_name }}_vol"
+    is_infinite: False
+    aggregate_name: "{{ lun.aggregate_name }}"
+    size: "{{ (lun.size * (1 + lun.vol_percent_snapshot_space)) | round(0,'ceil') | int}}"
+    size_unit: "{{ lun.size_unit }}"
+    space_guarantee: none
+    policy: default
+    percent_snapshot_space: "{{ (lun.vol_percent_snapshot_space * 100) | int }}"
+    vserver: "{{ lun.vserver }}"
+    wait_for_completion: True
+    volume_security_style: unix
+    hostname: "{{ netapp_hostname }}"
+    username: "{{ netapp_username }}"
+    password: "{{ netapp_password }}"
+
+- name: Create LUN
+  na_ontap_lun:
+    state: "{{ lun.status }}"
+    name: "{{ fact_new_random_lun_name }}"
+    flexvol_name: "{{ fact_new_random_lun_name }}_vol"
+    vserver: "{{ lun.vserver }}"
+    size: "{{ lun.size }}"
+    size_unit: "{{ lun.size_unit }}"
+    ostype: linux
+    space_reserve: "{{ lun.space_reserve }}"
+    space_allocation: "{{ lun.space_allocation }}"
+    hostname: "{{ netapp_hostname }}"
+    username: "{{ netapp_username }}"
+    password: "{{ netapp_password }}"
+  register: lun_creation_result
+
+- debug: var=lun_creation_result
+  when: debug is defined

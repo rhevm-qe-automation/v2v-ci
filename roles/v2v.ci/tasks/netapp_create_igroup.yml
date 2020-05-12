@@ -12,7 +12,7 @@
     loop_control:
       loop_var: host_iter
 
-  when: igroups_iter.initiator_group_type == 'fcp'
+  when: igroup.initiator_group_type == 'fcp'
 
 
 - block:
@@ -27,7 +27,7 @@
     loop_control:
       loop_var: host_iter
 
-  when: igroups_iter.initiator_group_type == 'iscsi'
+  when: igroup.initiator_group_type == 'iscsi'
 
 
 - name: fetch '{{ wwpn_or_short_fqdn_file_path }}' file to Ansible driver
@@ -52,34 +52,34 @@
   when: debug is defined
 
 
-- name: Make FC Igroup "{{ igroups_iter.status }}"
+- name: Make FC Igroup {{ igroup.status }}
   na_ontap_igroup:
-    state: "{{ igroups_iter.status }}"
-    name: "{{ igroups_iter.name }}"
-    initiator_group_type: "{{ igroups_iter.initiator_group_type }}"
-    ostype: "{{ igroups_iter.ostype }}"
+    state: "{{ igroup.status }}"
+    name: "{{ igroup.name }}"
+    initiator_group_type: "{{ igroup.initiator_group_type }}"
+    ostype: "{{ igroup.ostype }}"
     initiators: "{{ file_contents_lst }}"
-    vserver: "{{ luns | selectattr('igroup', 'equalto', igroups_iter.name) | map(attribute='vserver') | first }}"
+    vserver: "{{ igroup.vserver }}"
     hostname: "{{ netapp_hostname }}"
     username: "{{ netapp_username }}"
     password: "{{ netapp_password }}"
-  when: igroups_iter.initiator_group_type == 'fcp'
+  when: igroup.initiator_group_type == 'fcp'
   register: fc_group_creation_attempt
   # this is to avoid failing when initiator group already exists. (the module is failing the run in that case)
   failed_when: fc_group_creation_attempt.failed == true and not 'maps for this initiator group exist' in fc_group_creation_attempt.msg
 
-- name: Make iSCSI Igroup "{{ igroups_iter.status }}"
+- name: Make iSCSI Igroup {{ igroup.status }}
   na_ontap_igroup:
-    state: "{{ igroups_iter.status }}"
-    name: "{{ igroups_iter.name }}"
-    initiator_group_type: "{{ igroups_iter.initiator_group_type }}"
-    ostype: "{{ igroups_iter.ostype }}"
+    state: "{{ igroup.status }}"
+    name: "{{ igroup.name }}"
+    initiator_group_type: "{{ igroup.initiator_group_type }}"
+    ostype: "{{ igroup.ostype }}"
     initiators: "{{ file_contents_lst }}"
-    vserver: "{{ luns | selectattr('igroup', 'equalto', igroups_iter.name) | map(attribute='vserver') | first }}"
+    vserver: "{{ igroup.vserver }}"
     hostname: "{{ netapp_hostname }}"
     username: "{{ netapp_username }}"
     password: "{{ netapp_password }}"
-  when: igroups_iter.initiator_group_type == 'iscsi'
+  when: igroup.initiator_group_type == 'iscsi'
   register: fc_group_creation_attempt
   # this is to avoid failing when initiator group already exists. (the module is failing the run in that case)
   failed_when: fc_group_creation_attempt.failed == true and not 'maps for this initiator group exist' in fc_group_creation_attempt.msg
