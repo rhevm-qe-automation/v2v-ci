@@ -11,4 +11,10 @@
     delegate_to: "{{ groups['ovirt_conversion_hosts'][0] }}"
     shell: iscsiadm -m discovery -p {{ iscsi_target_ip }} -t st -l
 
-  when: True #TODO: when luns.type == 'iscsi'
+  when: rhv_storage == 'iscsi'
+
+# Run /usr/libexec/vdsm/fc-scan
+- name: Run fc-scan script
+  delegate_to: "{{ groups['ovirt_conversion_hosts'][0] }}"
+  shell: /usr/libexec/vdsm/fc-scan
+  when: rhv_storage == 'fcp'

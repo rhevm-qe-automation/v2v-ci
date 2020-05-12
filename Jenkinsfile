@@ -287,7 +287,7 @@ pipeline {
           }
         }
 
-        stage ('SSH configuration') {
+        stage ('SSH Configuration') {
           when {
             expression { stages_['SSH Configuration'] }
           }

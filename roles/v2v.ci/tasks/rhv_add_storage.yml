@@ -14,7 +14,6 @@
 - include: '{{role_path}}/tasks/netapp.yml'
 
 - include: '{{role_path}}/tasks/rhv_storage_discovery.yml'
-  when: rhv_storage == 'iscsi'
 
 # Add data iSCSI storage domain
 - name: Add data iSCSI storage domain
