@@ -6,7 +6,7 @@
     ansible_user: root
     ansible_ssh_pass: "{{ hostvars[v2v_item].root_password }}"
     ansible_pipelining: true
-  when: (v2v_item in groups['ovirt_conversion_hosts']) or (v2v_item in groups['ovirt_conversion_host_vms'])
+  when: v2v_item in groups['ovirt_conversion_hosts']
 
 # Install Nmon
 - name: Gathering facts
@@ -25,9 +25,41 @@
     mode: "0777"
 
 # Install Nmon requirements for RHEL 8
-- name: Ensure ncurses packages are installed
-  delegate_to: "{{ v2v_item }}"
-  yum:
-    name: 'libncurses*'
-    state: present
+- block:
+    - set_fact:
+        rhel_repo_string: "rhel_{{ ansible_distribution_version | replace('.', '') }}_x86.repo"
+
+    - set_fact:
+        rhel_repo_full_name: "{{ rhel_repo_dir}}{{ rhel_repo_string }}"
+        rhel_repo_url_for_wget_command: "{{ rhel_repo_url_start }}{{ rhel_repo_string }}{{ rhel_repo_url_end }}"
+
+    - name: Ensure wget package is installed
+      delegate_to: "{{ v2v_item }}"
+      yum:
+        name: wget
+        state: present
+
+    - name: Check if repo file already exist
+      delegate_to: "{{ v2v_item }}"
+      stat:
+        path: "{{ rhel_repo_full_name }}"
+      register: repo_file_exist
+
+    - name: download RHEL repo
+      delegate_to: "{{ v2v_item }}"
+      command: "{{ command_item }}"
+      with_items:
+        - "wget --no-check-certificate {{ rhel_repo_url_for_wget_command }} -O {{ rhel_repo_full_name }}"
+        - "yum clean all"
+      loop_control:
+        loop_var: command_item
+      args:
+        warn: no
+      when: repo_file_exist.stat.exists == false
+
+    - name: Ensure ncurses packages are installed
+      delegate_to: "{{ v2v_item }}"
+      yum:
+        name: 'libncurses*'
+        state: present
   when: ansible_distribution_major_version == '8'
