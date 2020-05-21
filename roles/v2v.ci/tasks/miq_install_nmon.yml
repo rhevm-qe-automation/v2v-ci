@@ -23,11 +23,10 @@
         dest: "{{ nmon_local_dir }}"
   when: nmon_file_exist.stat.exists == false
 
-# Install Nmon on CFME, RHV hosts and conversion VMs
+# Install Nmon on CFME and RHV hosts
 - include_tasks: nmon_installation.yml
   with_items:
     - "{{ miq_vm_name }}.{{ miq_vm_dns_domain }}"
     - "{{ groups['ovirt_conversion_hosts'] }}"
-    - "{{ groups['ovirt_conversion_host_vms'] }}"
   loop_control:
     loop_var: v2v_item
