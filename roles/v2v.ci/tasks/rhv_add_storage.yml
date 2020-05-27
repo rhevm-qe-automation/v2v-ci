@@ -23,7 +23,7 @@
       password: "{{ v2v_ci_rhv_password }}"
       hostname: "{{ v2v_ci_rhv_hostname }}"
       insecure: yes
-    name: "{{ rhv_storage_domain_name }}"
+    name: "{{ v2v_ci_target_datastore }}"
     state: present
     host: "{{ groups['ovirt_conversion_hosts'][0] }}"
     data_center: "{{ rhv_data_center_name }}"
@@ -44,7 +44,7 @@
       password: "{{ v2v_ci_rhv_password }}"
       hostname: "{{ v2v_ci_rhv_hostname }}"
       insecure: yes
-    name: "{{ rhv_storage_domain_name }}"
+    name: "{{ v2v_ci_target_datastore }}"
     state: present
     host: "{{ groups['ovirt_conversion_hosts'][0] }}"
     data_center: "{{ rhv_data_center_name }}"

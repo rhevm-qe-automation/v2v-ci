@@ -18,10 +18,10 @@
           password: "{{ v2v_ci_rhv_password }}"
           hostname: "{{ v2v_ci_rhv_hostname }}"
           insecure: yes
-        storage_domain: "{{ rhv_storage_domain_name }}"
+        storage_domain: "{{ v2v_ci_target_datastore }}"
       register: storage_vms_list
 
-    - name: Remove oVirt/RHV VMs relate to {{ rhv_storage_domain_name }} storage domain
+    - name: Remove oVirt/RHV VMs relate to {{ v2v_ci_target_datastore }} storage domain
       ovirt_vm:
         auth:
           username: "{{ v2v_ci_rhv_user }}"
@@ -32,10 +32,10 @@
         name: "{{ item.name }}"
         cluster: "{{ v2v_ci_target_cluster }}"
       with_items: "{{ storage_vms_list.ovirt_storage_vms }}"
-  when: rhv_storage_domain_name in sd_list.ovirt_storage_domains
+  when: v2v_ci_target_datastore in sd_list.ovirt_storage_domains
 
 # Remove oVirt/RHV storage domain
-- name: Remove storage domain {{ rhv_storage_domain_name }}
+- name: Remove storage domain {{ v2v_ci_target_datastore }}
   ovirt_storage_domain:
     auth:
       username: "{{ v2v_ci_rhv_user }}"
@@ -43,7 +43,7 @@
       hostname: "{{ v2v_ci_rhv_hostname }}"
       insecure: yes
     state: absent
-    name: "{{ rhv_storage_domain_name }}"
+    name: "{{ v2v_ci_target_datastore }}"
     format: true
 
 # Remove NetApp LUN and Volume if present
@@ -117,7 +117,7 @@
       password: "{{ v2v_ci_rhv_password }}"
       hostname: "{{ v2v_ci_rhv_hostname }}"
       insecure: yes
-    name: "{{ rhv_storage_domain_name }}"
+    name: "{{ v2v_ci_target_datastore }}"
     state: present
     host: "{{ groups['ovirt_conversion_hosts'] | first }}"
     data_center: "{{ rhv_data_center_name }}"
@@ -138,7 +138,7 @@
       password: "{{ v2v_ci_rhv_password }}"
       hostname: "{{ v2v_ci_rhv_hostname }}"
       insecure: yes
-    name: "{{ rhv_storage_domain_name }}"
+    name: "{{ v2v_ci_target_datastore }}"
     state: present
     host: "{{ groups['ovirt_conversion_hosts'] | first }}"
     data_center: "{{ rhv_data_center_name }}"
