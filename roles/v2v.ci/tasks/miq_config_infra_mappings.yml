@@ -72,7 +72,7 @@
 
     - name: Extracting target datastore id from JSON
       set_fact:
-        target_datastore_id: "{{ target_datastore_json.json | json_query(query) | first }}"
+        target_datastore_id: "{{ target_datastore_json.json | json_query(query) | last }}"
 
     - name: Collect source lan ids
       uri:
