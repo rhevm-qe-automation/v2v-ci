@@ -6,37 +6,8 @@
 - name: Start collecting CFME logs
   script: roles/v2v.ci/files/cfme_start_log.sh "v2v_test"
 
-- name: Add Conversion hosts
-  add_host:
-    name: "{{ item }}"
-    ansible_user: root
-    ansible_ssh_pass: "{{ hostvars[item].root_password }}"
-    ansible_pipelining: true
+- include_tasks: rhv_start_monitoring.yml
   with_items:
-    -  "{{ groups['ovirt_conversion_hosts'] }}"
-
-- name: Delete Conversion hosts logs
-  delegate_to: "{{ item }}"
-  script: roles/v2v.ci/files/del_logs.sh
-  with_items:
-    -  "{{ groups['ovirt_conversion_hosts'] }}"
-
-- name: Copy shell script
-  delegate_to: "{{ item }}"
-  copy:
-    src: roles/v2v.ci/files/conv_host_start_log.sh
-    dest: /tmp/conv_host_start_log.sh
-    mode: 0777
-  with_items:
-    -  "{{ groups['ovirt_conversion_hosts'] }}"
-
-- name: Start Collecting Conversion hosts logs
-  delegate_to: "{{ item }}"
-  command: sh /tmp/conv_host_start_log.sh "v2v_test"
-  async: 600
-  poll: 5
-  with_items:
-    -  "{{ groups['ovirt_conversion_hosts'] }}"
-
-
-
+    - "{{ groups['ovirt_conversion_hosts'] }}"
+  loop_control:
+    loop_var: rhv_item
