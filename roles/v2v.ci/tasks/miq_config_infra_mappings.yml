@@ -9,111 +9,126 @@
   register: transformation_mappings_json
 
 - block:
+  - set_fact:
+      query: "resources[?name=='{{ v2v_ci_infra_mapping_name }}'].id"
 
-    - name: Get source cluster ID
-      uri:
-        url: "https://{{ inventory_hostname }}/api/clusters/?filter[]=name={{ v2v_ci_source_cluster }}&expand=resources"
-        user: "{{ miq_app_username }}"
-        password: "{{ miq_app_password }}"
-        method: GET
-        validate_certs: no
-      register: src_cluster_json
+  - name: Extract transformation mapping ID from JSON
+    set_fact:
+      transformation_mapping_id: "{{ transformation_mappings_json.json | json_query(query) | first }}"
 
-    - set_fact:
-        query: "resources[?name=='{{ v2v_ci_source_cluster }}'].id"
+  - name: Remove transformation mapping if already exists
+    uri:
+      url: "https://{{ inventory_hostname }}/api/transformation_mappings/{{ transformation_mapping_id }}"
+      user: "{{ miq_app_username }}"
+      password: "{{ miq_app_password }}"
+      method: DELETE
+      status_code: 204
+      validate_certs: no
+  when: transformation_mappings_json.json.subcount != 0
 
-    - name: Extracting cluster id from JSON
-      set_fact:
-        source_cluster_id: "{{ src_cluster_json.json | json_query(query) | first }}"
+- name: Get source cluster ID
+  uri:
+    url: "https://{{ inventory_hostname }}/api/clusters/?filter[]=name={{ v2v_ci_source_cluster }}&expand=resources"
+    user: "{{ miq_app_username }}"
+    password: "{{ miq_app_password }}"
+    method: GET
+    validate_certs: no
+  register: src_cluster_json
 
-    - name: Get target cluster ID
-      uri:
-        url: "https://{{ inventory_hostname }}/api/clusters/?filter[]=name={{ v2v_ci_target_cluster }}&expand=resources"
-        user: "{{ miq_app_username }}"
-        password: "{{ miq_app_password }}"
-        method: GET
-        validate_certs: no
-      register: target_cluster_json
+- set_fact:
+    query: "resources[?name=='{{ v2v_ci_source_cluster }}'].id"
 
-    - set_fact:
-        query: "resources[?name=='{{ v2v_ci_target_cluster }}'].id"
+- name: Extracting cluster id from JSON
+  set_fact:
+    source_cluster_id: "{{ src_cluster_json.json | json_query(query) | first }}"
 
-    - name: Extracting cluster id from JSON
-      set_fact:
-        target_cluster_id: "{{ target_cluster_json.json | json_query(query) | first }}"
+- name: Get target cluster ID
+  uri:
+    url: "https://{{ inventory_hostname }}/api/clusters/?filter[]=name={{ v2v_ci_target_cluster }}&expand=resources"
+    user: "{{ miq_app_username }}"
+    password: "{{ miq_app_password }}"
+    method: GET
+    validate_certs: no
+  register: target_cluster_json
 
-    - name: Get source datastore ID
-      uri:
-        url: "https://{{ inventory_hostname }}/api/data_stores/?filter[]=name={{ v2v_ci_source_datastore }}&expand=resources"
-        user: "{{ miq_app_username }}"
-        password: "{{ miq_app_password }}"
-        method: GET
-        validate_certs: no
-      register: src_datastore_json
+- set_fact:
+    query: "resources[?name=='{{ v2v_ci_target_cluster }}'].id"
 
-    - set_fact:
-        query: "resources[?name=='{{ v2v_ci_source_datastore }}'].id"
+- name: Extracting cluster id from JSON
+  set_fact:
+    target_cluster_id: "{{ target_cluster_json.json | json_query(query) | first }}"
 
-    - name: Extracting source datastore id from JSON
-      set_fact:
-        source_datastore_id: "{{ src_datastore_json.json | json_query(query) | first }}"
+- name: Get source datastore ID
+  uri:
+    url: "https://{{ inventory_hostname }}/api/data_stores/?filter[]=name={{ v2v_ci_source_datastore }}&expand=resources"
+    user: "{{ miq_app_username }}"
+    password: "{{ miq_app_password }}"
+    method: GET
+    validate_certs: no
+  register: src_datastore_json
 
-    - name: Get target datastore ID
-      uri:
-        url: "https://{{ inventory_hostname }}/api/data_stores/?filter[]=name={{ v2v_ci_target_datastore }}&expand=resources"
-        user: "{{ miq_app_username }}"
-        password: "{{ miq_app_password }}"
-        method: GET
-        validate_certs: no
-      register: target_datastore_json
+- set_fact:
+    query: "resources[?name=='{{ v2v_ci_source_datastore }}'].id"
 
-    - set_fact:
-        query: "resources[?name=='{{ v2v_ci_target_datastore }}'].id"
+- name: Extracting source datastore id from JSON
+  set_fact:
+    source_datastore_id: "{{ src_datastore_json.json | json_query(query) | first }}"
 
-    - name: Extracting target datastore id from JSON
-      set_fact:
-        target_datastore_id: "{{ target_datastore_json.json | json_query(query) | last }}"
+- name: Get target datastore ID
+  uri:
+    url: "https://{{ inventory_hostname }}/api/data_stores/?filter[]=name={{ v2v_ci_target_datastore }}&expand=resources"
+    user: "{{ miq_app_username }}"
+    password: "{{ miq_app_password }}"
+    method: GET
+    validate_certs: no
+  register: target_datastore_json
 
-    - name: Collect source lan ids
-      uri:
-        url: "https://{{ inventory_hostname }}/api/lans/?filter[]=name={{ v2v_ci_source_lan | regex_replace (' ', '%20') }}&expand=resources&attributes=name"
-        user: "{{ miq_app_username }}"
-        password: "{{ miq_app_password }}"
-        method: GET
-        validate_certs: no
-      register: lan_ids_json
+- set_fact:
+    query: "resources[?name=='{{ v2v_ci_target_datastore }}'].id"
 
-    - set_fact:
-        source_lan_query: "resources[?name=='{{ v2v_ci_source_lan }}'].id"
+- name: Extracting target datastore id from JSON
+  set_fact:
+    target_datastore_id: "{{ target_datastore_json.json | json_query(query) | last }}"
 
-    - name: Extracting source lan id from JSON
-      set_fact:
-        source_lan_id: "{{ lan_ids_json.json | json_query(source_lan_query) }}"
+- name: Collect source lan ids
+  uri:
+    url: "https://{{ inventory_hostname }}/api/lans/?filter[]=name={{ v2v_ci_source_lan | regex_replace (' ', '%20') }}&expand=resources&attributes=name"
+    user: "{{ miq_app_username }}"
+    password: "{{ miq_app_password }}"
+    method: GET
+    validate_certs: no
+  register: lan_ids_json
 
-    - name: Get target lan ID
-      uri:
-        url: "https://{{ inventory_hostname }}/api/clusters/{{ target_cluster_id }}?attributes=lans&expand=resources"
-        user: "{{ miq_app_username }}"
-        password: "{{ miq_app_password }}"
-        method: GET
-        validate_certs: no
-      register: target_lan_json
+- set_fact:
+    source_lan_query: "resources[?name=='{{ v2v_ci_source_lan }}'].id"
 
-    - set_fact:
-        query: "lans[?name=='{{ v2v_ci_target_lan }}'].id"
+- name: Extracting source lan id from JSON
+  set_fact:
+    source_lan_id: "{{ lan_ids_json.json | json_query(source_lan_query) }}"
 
-    - name: Extracting target lan id from JSON
-      set_fact:
-        target_lan_id: "{{ target_lan_json.json | json_query(query) | first }}"
+- name: Get target lan ID
+  uri:
+    url: "https://{{ inventory_hostname }}/api/clusters/{{ target_cluster_id }}?attributes=lans&expand=resources"
+    user: "{{ miq_app_username }}"
+    password: "{{ miq_app_password }}"
+    method: GET
+    validate_certs: no
+  register: target_lan_json
 
-    - name: Create Infra Mappings
-      uri:
-        url: "https://{{ inventory_hostname }}/api/transformation_mappings"
-        user: "{{ miq_app_username }}"
-        password: "{{ miq_app_password }}"
-        method: POST
-        validate_certs: no
-        body_format: json
-        body: "{{ lookup('template', 'templates/transformation_mapping.j2') | from_yaml }}"
+- set_fact:
+    query: "lans[?name=='{{ v2v_ci_target_lan }}'].id"
 
-  when: transformation_mappings_json.json.subcount == 0
+- name: Extracting target lan id from JSON
+  set_fact:
+    target_lan_id: "{{ target_lan_json.json | json_query(query) | first }}"
+
+- name: Create Infra Mappings
+  uri:
+    url: "https://{{ inventory_hostname }}/api/transformation_mappings"
+    user: "{{ miq_app_username }}"
+    password: "{{ miq_app_password }}"
+    method: POST
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'templates/transformation_mapping.j2') | from_yaml }}"
+
