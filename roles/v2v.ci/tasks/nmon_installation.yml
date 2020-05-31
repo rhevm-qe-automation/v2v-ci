@@ -30,7 +30,7 @@
         rhel_repo_string: "rhel_{{ ansible_distribution_version | replace('.', '') }}_x86.repo"
 
     - set_fact:
-        rhel_repo_full_name: "{{ rhel_repo_dir}}{{ rhel_repo_string }}"
+        rhel_repo_path: "{{ rhel_repo_dir}}{{ rhel_repo_string }}"
         rhel_repo_url_for_wget_command: "{{ rhel_repo_url_start }}{{ rhel_repo_string }}{{ rhel_repo_url_end }}"
 
     - name: Ensure wget package is installed
@@ -42,14 +42,14 @@
     - name: Check if repo file already exist
       delegate_to: "{{ v2v_item }}"
       stat:
-        path: "{{ rhel_repo_full_name }}"
+        path: "{{ rhel_repo_path }}"
       register: repo_file_exist
 
     - name: download RHEL repo
       delegate_to: "{{ v2v_item }}"
       command: "{{ command_item }}"
       with_items:
-        - "wget --no-check-certificate {{ rhel_repo_url_for_wget_command }} -O {{ rhel_repo_full_name }}"
+        - "wget --no-check-certificate {{ rhel_repo_url_for_wget_command }} -O {{ rhel_repo_path }}"
         - "yum clean all"
       loop_control:
         loop_var: command_item

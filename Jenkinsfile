@@ -1,4 +1,4 @@
-@Library(['rhv-qe-jenkins-library-mguetta']) _
+@Library(['rhv-qe-jenkins-library@master']) _
 
 properties(
   [
