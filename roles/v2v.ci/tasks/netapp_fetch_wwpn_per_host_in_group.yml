@@ -12,5 +12,4 @@
 
 # The format of contents written to file is like this: 2100000e1ef67af0,2100000e1ef67af1,\n2100000e1ef67c91,2100000e1ef67c90,
 - name: Write WWPNs to a CSV file
-#  shell: echo "{{host_iter | default(' ')}},{{results.stdout_lines|join(',')|string|replace('0x','')}}," >> '{{ wwpn_file_path }}'
   shell: echo "{{ results.stdout_lines | join(',') | string | replace('0x','')}}," >> '{{ wwpn_or_short_fqdn_file_path }}'
