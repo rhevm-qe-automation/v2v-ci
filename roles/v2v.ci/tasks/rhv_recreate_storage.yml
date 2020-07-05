@@ -1,0 +1,150 @@
+---
+
+# Remove oVirt/RHV target instances if present
+- name: Gather information about all storage domains
+  ovirt_storage_domain_info:
+    auth:
+      username: "{{ v2v_ci_rhv_user }}"
+      password: "{{ v2v_ci_rhv_password }}"
+      hostname: "{{ v2v_ci_rhv_hostname }}"
+      insecure: yes
+  register: sd_list
+
+- block:
+    - name: Retrieve information about oVirt/RHV virtual machines relate to a storage domain
+      ovirt_storage_vm_info:
+        auth:
+          username: "{{ v2v_ci_rhv_user }}"
+          password: "{{ v2v_ci_rhv_password }}"
+          hostname: "{{ v2v_ci_rhv_hostname }}"
+          insecure: yes
+        storage_domain: "{{ v2v_ci_target_datastore }}"
+      register: storage_vms_list
+
+    - name: Remove oVirt/RHV VMs relate to {{ v2v_ci_target_datastore }} storage domain
+      ovirt_vm:
+        auth:
+          username: "{{ v2v_ci_rhv_user }}"
+          password: "{{ v2v_ci_rhv_password }}"
+          hostname: "{{ v2v_ci_rhv_hostname }}"
+          insecure: yes
+        state: absent
+        name: "{{ item.name }}"
+        cluster: "{{ v2v_ci_target_cluster }}"
+      with_items: "{{ storage_vms_list.ovirt_storage_vms }}"
+  when: v2v_ci_target_datastore in sd_list.ovirt_storage_domains
+
+# Remove oVirt/RHV storage domain
+- name: Remove storage domain {{ v2v_ci_target_datastore }}
+  ovirt_storage_domain:
+    auth:
+      username: "{{ v2v_ci_rhv_user }}"
+      password: "{{ v2v_ci_rhv_password }}"
+      hostname: "{{ v2v_ci_rhv_hostname }}"
+      insecure: yes
+    state: absent
+    name: "{{ v2v_ci_target_datastore }}"
+    format: true
+
+# Remove NetApp LUN and Volume if present
+- name: Gather NetApp LUNs information
+  na_ontap_info:
+    state: info
+    hostname: "{{ netapp_hostname }}"
+    username: "{{ netapp_username }}"
+    password: "{{ netapp_password }}"
+    gather_subset:
+      - lun_info
+  register: ontap_info_result
+
+- set_fact:
+    lun_name_fact: "{{ item.split('/') | last }}"
+  with_items: "{{ ontap_info_result.ontap_info.lun_info }}"
+  when: lun.name in (item.split('/') | last)
+
+- block:
+    # Unmap LUN
+    - name: Delete NetApp LUN mapping
+      na_ontap_lun_map:
+        state: absent
+        initiator_group_name: "{{ lun.igroup }}"
+        path:  "/vol/{{ lun_name_fact }}_vol/{{ lun_name_fact }}"
+        vserver: "{{ lun.vserver }}"
+        hostname: "{{ netapp_hostname }}"
+        username: "{{ netapp_username }}"
+        password: "{{ netapp_password }}"
+
+    # Delete LUN
+    - name: Delete NetApp LUN {{ lun_name_fact }}
+      na_ontap_lun:
+        state: absent
+        name: "{{ lun_name_fact }}"
+        flexvol_name: "{{ lun_name_fact }}_vol"
+        vserver: "{{ lun.vserver }}"
+        hostname: "{{ netapp_hostname }}"
+        username: "{{ netapp_username }}"
+        password: "{{ netapp_password }}"
+
+    # Delete Volume
+    - name: Delete NetApp Volume {{ lun_name_fact }}_vol
+      na_ontap_volume:
+        state: absent
+        name: "{{ lun_name_fact }}_vol"
+        aggregate_name: "{{ lun.aggregate_name }}"
+        vserver: "{{ lun.vserver }}"
+        hostname: "{{ netapp_hostname }}"
+        username: "{{ netapp_username }}"
+        password: "{{ netapp_password }}"
+  when: lun_name_fact is defined
+
+- name: Add Conversion hosts in order to delegate to them
+  add_host:
+    name: "{{ item }}"
+    ansible_user: root
+    ansible_ssh_pass: "{{ hostvars[item].root_password }}"
+    ansible_pipelining: true
+  with_items:
+    - "{{ groups['ovirt_conversion_hosts'] }}"
+
+- include: '{{role_path}}/tasks/netapp.yml'
+- include: '{{role_path}}/tasks/rhv_storage_discovery.yml'
+
+# Add data iSCSI storage domain
+- name: Add data iSCSI storage domain
+  ovirt_storage_domain:
+    auth:
+      username: "{{ v2v_ci_rhv_user }}"
+      password: "{{ v2v_ci_rhv_password }}"
+      hostname: "{{ v2v_ci_rhv_hostname }}"
+      insecure: yes
+    name: "{{ v2v_ci_target_datastore }}"
+    state: present
+    host: "{{ groups['ovirt_conversion_hosts'] | first }}"
+    data_center: "{{ rhv_data_center_name }}"
+    iscsi:
+      target: "{{ iscsi_target_wwn }}"
+      lun_id:
+       - "{{ '3' + create_lun_map_result['lun_naa_id'] }}"
+      address: "{{ iscsi_target_ip }}"
+    discard_after_delete: True
+    wipe_after_delete: True
+  when: rhv_storage == 'iscsi'
+
+# Add data FCP storage domain
+- name: Add data FCP storage domain
+  ovirt_storage_domain:
+    auth:
+      username: "{{ v2v_ci_rhv_user }}"
+      password: "{{ v2v_ci_rhv_password }}"
+      hostname: "{{ v2v_ci_rhv_hostname }}"
+      insecure: yes
+    name: "{{ v2v_ci_target_datastore }}"
+    state: present
+    host: "{{ groups['ovirt_conversion_hosts'] | first }}"
+    data_center: "{{ rhv_data_center_name }}"
+    fcp:
+      lun_id:
+       - "{{ '3' + create_lun_map_result['lun_naa_id'] }}"
+    discard_after_delete: True
+    wipe_after_delete: True
+  when: rhv_storage == 'fcp'

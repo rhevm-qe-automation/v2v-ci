@@ -4,7 +4,9 @@ properties(
   [
     parameters(
       [
-        string(defaultValue: 'v2v-node', description: 'Name or label of slave to run on', name: 'NODE_LABEL'),
+        string(defaultValue: 'v2v-node-rdu', description: 'Name or label of slave to run on', name: 'NODE_LABEL'),
+        choice(defaultValue: 'RDU', description: 'Choose the environment', name: 'ENVIRONMENT', choices: ['RDU', 'TLV']),
+        booleanParam(defaultValue: false, description: 'Recreating RHV Storage Domain. Supported only in RDU environment', name: 'RHV_RECREATE_STORAGE'),
         booleanParam(defaultValue: false, description: 'Nightly pre check', name: 'MIQ_NIGHTLY_PRE_CHECK'),
         booleanParam(defaultValue: false, description: 'Remove existing instance', name: 'MIQ_REMOVE_EXISTING_INSTANCE'),
         string(defaultValue: '', description: 'Name of GE or label that match the desired GE.', name: 'GE_NAME'),
@@ -12,10 +14,11 @@ properties(
         string(defaultValue: '', description: 'Image URL e.g. http://file.cloudforms.lab.eng.rdu2.redhat.com/builds/cfme/5.10/stable/cfme-rhevm-5.10.0.33-1.x86_64.qcow2', name: 'CFME_IMAGE_URL'),
         string(defaultValue: '', description: 'RHV hosts selection, separated by a comma e.g. 1,3-5,7. Leave empty to use ALL hosts', name: 'RHV_HOSTS'),
         string(defaultValue: '', description: 'VMware hosts selection, separated by a comma e.g. 1,3-5,7. Leave empty to use ALL hosts', name: 'VMW_HOSTS'),
-        string(defaultValue: '', description: 'The source VMware data storage type. If left empty, the type will be set accordingly to source YML file', name: 'VMW_STORAGE_NAME'),
-        string(defaultValue: '', description: 'The target RHV data storage type. If left empty, the type will be set accordingly to source YML file', name: 'RHV_STORAGE_NAME'),
+        choice(defaultValue: 'iscsi', description: 'Choose the target RHV storage type. This parameter is relevant only for RDU environment', name: 'RHV_STORAGE', choices: ['iscsi', 'fcp']),
+        string(defaultValue: '', description: 'The source VMware data storage name. If left empty, the name will be set accordingly to source YML file', name: 'VMW_STORAGE_NAME'),
+        string(defaultValue: '', description: 'The target RHV data storage name. If left empty, the name will be set accordingly to source YML file', name: 'RHV_STORAGE_NAME'),
         string(defaultValue: '', description: 'The number of hosts to be migrated', name: 'NUMBER_OF_VMS'),
-        string(defaultValue: 'regression_v2v_76_100_oct_2018', description: 'VMware Template name', name: 'VMW_TEMPLATE_NAME'),
+        string(defaultValue: '', description: 'VMware Template name', name: 'VMW_TEMPLATE_NAME'),
         choice(defaultValue: 'VDDK', description: 'Migration Protocol - SSH/VDDK', name: 'TRANSPORT_METHODS', choices: ['VDDK', 'SSH']),
         string(defaultValue: '20', description: 'Provider concurrent migration max num of VMs', name: 'PROVIDER_CONCURRENT_MAX'),
         string(defaultValue: '10', description: 'Host concurrent migration max num of VMs', name: 'HOST_CONCURRENT_MAX'),
@@ -106,10 +109,29 @@ pipeline {
                                                         --v2v_ci_source_datastore "$VMW_STORAGE_NAME" \
                                                         --v2v_ci_target_datastore "$RHV_STORAGE_NAME" \
                                                         --job_basename_url $JOB_BASE_NAME \
-                                                        --rhv_ge "$GE_NAME"
+                                                        --rhv_ge "$GE_NAME" \
+                                                        --v2v_ci_environment "$ENVIRONMENT" \
+                                                        --rhv_storage "$RHV_STORAGE"
 
                 deactivate
                 '''
+          }
+        }
+
+        stage ("oVirt/RHV Recreate Storage Domain") {
+          when {
+            allOf {
+              expression { params.RHV_RECREATE_STORAGE }
+              expression { params.ENVIRONMENT == 'RDU'}
+            }
+          }
+          steps {
+            v2v_ansible(
+              playbook: "miq_run_step.yml",
+              extraVars: ['@extra_vars.yml', 'rhv_recreate_storage_domain=true'],
+              tags: ['rhv_recreate_storage'],
+              verbosity: params.VERBOSITY_LEVEL
+            )
           }
         }
 

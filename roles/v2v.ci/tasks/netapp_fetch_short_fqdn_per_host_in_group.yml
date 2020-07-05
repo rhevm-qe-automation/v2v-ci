@@ -1,0 +1,8 @@
+---
+- debug: var=host_iter
+  when: debug is defined
+
+# The format of contents written to file is like this: iqn.1994-05.com.redhat:f01-h04-000-1029u,\niqn.1994-05.com.redhat:f01-h08-000-1029u,
+- name: Write WWPNs to a CSV file
+  shell: echo "{{ iscsi_initiator_wwn.split(':')[0] + ':' + host_iter.split('.')[0] | lower + ','}}" >> '{{ wwpn_or_short_fqdn_file_path }}'
+

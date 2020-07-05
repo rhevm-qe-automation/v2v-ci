@@ -1,0 +1,85 @@
+---
+
+- block:
+
+  - name: Set temporary file name where igroup WWPN or short FQDN will be stored
+    set_fact:
+      wwpn_or_short_fqdn_file_path: "/tmp/wwpn_lst_{{ lookup('pipe', 'date \"+%Y-%m-%d_%H-%M-%S\"') }}.csv"
+
+  - include: netapp_fetch_wwpn_per_host_in_group.yml
+    with_items:
+      -  "{{ groups['ovirt_conversion_hosts'] }}"
+    loop_control:
+      loop_var: host_iter
+
+  when: igroup.initiator_group_type == 'fcp'
+
+
+- block:
+
+  - name: Set temporary file name where igroup WWPN or short FQDN will be stored
+    set_fact:
+      wwpn_or_short_fqdn_file_path: "/tmp/short_fqdn_lst_{{ lookup('pipe', 'date \"+%Y-%m-%d_%H-%M-%S\"') }}.csv"
+
+  - include: netapp_fetch_short_fqdn_per_host_in_group.yml
+    with_items:
+      -  "{{ groups['ovirt_conversion_hosts'] }}"
+    loop_control:
+      loop_var: host_iter
+
+  when: igroup.initiator_group_type == 'iscsi'
+
+
+- name: fetch '{{ wwpn_or_short_fqdn_file_path }}' file to Ansible driver
+  fetch:
+    src: '{{ wwpn_or_short_fqdn_file_path }}'
+    dest: /tmp/
+    flat: yes
+
+- name: Read wwpn_or_short_fqdn_file_path csv file
+  set_fact:
+    file_contents: '{{ lookup("file", "{{ wwpn_or_short_fqdn_file_path }}" ) }}'
+
+- name: Convert the file contents to string
+  set_fact:
+    file_contents_str: "{{ file_contents | regex_replace(',$','') | replace('\n','') }}"
+
+- name: Convert string to list
+  set_fact:
+    file_contents_lst: "{{ file_contents_str.split(',') }}"
+
+- debug: var=file_contents_lst
+  when: debug is defined
+
+
+- name: Make FC Igroup {{ igroup.status }}
+  na_ontap_igroup:
+    state: "{{ igroup.status }}"
+    name: "{{ igroup.name }}"
+    initiator_group_type: "{{ igroup.initiator_group_type }}"
+    ostype: "{{ igroup.ostype }}"
+    initiators: "{{ file_contents_lst }}"
+    vserver: "{{ igroup.vserver }}"
+    hostname: "{{ netapp_hostname }}"
+    username: "{{ netapp_username }}"
+    password: "{{ netapp_password }}"
+  when: igroup.initiator_group_type == 'fcp'
+  register: fc_group_creation_attempt
+  # this is to avoid failing when initiator group already exists. (the module is failing the run in that case)
+  failed_when: fc_group_creation_attempt.failed == true and not 'maps for this initiator group exist' in fc_group_creation_attempt.msg
+
+- name: Make iSCSI Igroup {{ igroup.status }}
+  na_ontap_igroup:
+    state: "{{ igroup.status }}"
+    name: "{{ igroup.name }}"
+    initiator_group_type: "{{ igroup.initiator_group_type }}"
+    ostype: "{{ igroup.ostype }}"
+    initiators: "{{ file_contents_lst }}"
+    vserver: "{{ igroup.vserver }}"
+    hostname: "{{ netapp_hostname }}"
+    username: "{{ netapp_username }}"
+    password: "{{ netapp_password }}"
+  when: igroup.initiator_group_type == 'iscsi'
+  register: fc_group_creation_attempt
+  # this is to avoid failing when initiator group already exists. (the module is failing the run in that case)
+  failed_when: fc_group_creation_attempt.failed == true and not 'maps for this initiator group exist' in fc_group_creation_attempt.msg

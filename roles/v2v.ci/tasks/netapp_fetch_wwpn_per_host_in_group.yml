@@ -1,0 +1,15 @@
+---
+- debug: var=host_iter
+  when: debug is defined
+
+- name: Fetch WWPN from host
+  shell: grep -v "zZzZ" -H /sys/class/fc_host/host*/port_name | awk '{split($0, wwpn, ":"); print wwpn[2]}'
+  register: results
+  delegate_to: "{{ host_iter }}"
+
+- debug: var=results.stdout_lines
+  when: debug is defined
+
+# The format of contents written to file is like this: 2100000e1ef67af0,2100000e1ef67af1,\n2100000e1ef67c91,2100000e1ef67c90,
+- name: Write WWPNs to a CSV file
+  shell: echo "{{ results.stdout_lines | join(',') | string | replace('0x','')}}," >> '{{ wwpn_or_short_fqdn_file_path }}'

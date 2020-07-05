@@ -2,6 +2,13 @@
 # Ansible 2.5 or higher:
 # Use dynamic includes only when looping is needed, they have no tag inheritance
 
+- import_tasks: rhv_recreate_storage.yml
+  when: rhv_recreate_storage_domain|default(false)|bool == true
+  delegate_to: localhost
+  connection: local
+  tags:
+    - rhv_recreate_storage
+
 - import_tasks: miq_pre_check.yml
   when: miq_pre_check|default(false)|bool == true
   delegate_to: localhost

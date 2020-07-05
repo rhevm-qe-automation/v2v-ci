@@ -1,0 +1,20 @@
+---
+
+# iscsi target logout & login to renew the luns discovery
+- block:
+
+  - name: iSCSI target logout after LUN creation
+    delegate_to: "{{ groups['ovirt_conversion_hosts'] | first }}"
+    shell: iscsiadm -m session -u
+
+  - name: iSCSI target login
+    delegate_to: "{{ groups['ovirt_conversion_hosts'] | first }}"
+    shell: iscsiadm -m discovery -p {{ iscsi_target_ip }} -t st -l
+
+  when: rhv_storage == 'iscsi'
+
+# Run /usr/libexec/vdsm/fc-scan
+- name: Run fc-scan script
+  delegate_to: "{{ groups['ovirt_conversion_hosts'] | first }}"
+  shell: /usr/libexec/vdsm/fc-scan
+  when: rhv_storage == 'fcp'

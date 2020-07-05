@@ -1,3 +1,5 @@
 ovirt-engine-sdk-python==4.3.0
 PyVmomi
 jmespath
+netapp-lib
+solidfire-sdk-python

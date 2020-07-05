@@ -1,0 +1,10 @@
+---
+
+- set_fact:
+    fact_new_random_lun_name: "{{ lun.name }}_{{ 1000 | random(start=1) }}"
+
+- include: netapp_create_igroup.yml
+
+- include: netapp_populate_lun.yml
+
+- include: netapp_map_lun_to_igroup.yml
