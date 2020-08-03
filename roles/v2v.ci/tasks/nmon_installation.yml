@@ -57,9 +57,11 @@
         warn: no
       when: repo_file_exist.stat.exists == false
 
-    - name: Ensure ncurses packages are installed
-      delegate_to: "{{ v2v_item }}"
-      yum:
-        name: 'libncurses*'
-        state: present
+  when: v2v_item not in groups['ovirt_conversion_hosts']
+
+- name: Ensure ncurses packages are installed
+  delegate_to: "{{ v2v_item }}"
+  yum:
+    name: 'libncurses*'
+    state: present
   when: ansible_distribution_major_version == '8'
