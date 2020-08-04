@@ -7,10 +7,10 @@ io_paths_ids=($(multipath -l | grep dm- | cut -d' ' -f2))
 # Constants
 logging_dir=/tmp
 case_dir=$logging_dir/$test_name
-processes_to_monitor=(ovirt-imageio-daemon)
-services_to_restart=(ovirt-imageio-daemon)
+processes_to_monitor=(ovirt-imageio)
+services_to_restart=(ovirt-imageio)
 monitor_processes=(nmon iostat top)
-log_folders=(/var/log/vdsm/import /var/log/ovirt-imageio-daemon)
+log_folders=(/var/log/vdsm/import /var/log/ovirt-imageio)
 
 if [ "$#" -ne 1 ]; then
     echo "Illegal number of parameters given."

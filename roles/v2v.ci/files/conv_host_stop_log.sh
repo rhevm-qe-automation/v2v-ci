@@ -9,8 +9,8 @@ case_dir=$logging_dir/$test_name
 case_files_dir=$case_dir/files
 package_versions_dir=$case_dir/versions
 processes_to_kill=(top iostat nmon)
-log_dirs=(/var/log/vdsm/import /var/log/ovirt-imageio-daemon)
-files_to_collect=(/var/log/vdsm/vdsm.log /etc/ovirt-imageio-daemon/daemon.conf /var/log/messages)
+log_dirs=(/var/log/vdsm/import /var/log/ovirt-imageio)
+files_to_collect=(/var/log/vdsm/vdsm.log /etc/ovirt-imageio/daemon.conf.sample /var/log/messages)
 packages=(vdsm virt-v2v nbdkit ovirt-imageio-daemon qemu-img)
 
 if [ "$#" -ne 1 ]; then
